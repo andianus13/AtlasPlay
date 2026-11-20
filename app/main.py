@@ -1,4 +1,5 @@
 """Titik masuk aplikasi.  Jalankan:  uvicorn app.main:app --reload"""
+import shutil
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request
@@ -12,10 +13,12 @@ from app.config import (
     APP_NAME,
     BANNER_DIR,
     COVER_DIR,
+    IS_VERCEL,
     SECRET_KEY,
     SESSION_COOKIE,
     SESSION_MAX_AGE,
     STATIC_DIR,
+    UPLOAD_DIR,
 )
 from app.database import SessionLocal, init_db
 from app.routers import admin, auth, public
@@ -41,6 +44,8 @@ _ERROR_HINTS = {
 async def lifespan(_app: FastAPI):
     COVER_DIR.mkdir(parents=True, exist_ok=True)
     BANNER_DIR.mkdir(parents=True, exist_ok=True)
+    if IS_VERCEL and (STATIC_DIR / "uploads").exists():
+        shutil.copytree(STATIC_DIR / "uploads", UPLOAD_DIR, dirs_exist_ok=True)
     init_db()
     with SessionLocal() as db:
         seed_database(db)
@@ -59,7 +64,12 @@ app.add_middleware(
     https_only=False,  # ubah ke True bila di-deploy lewat HTTPS
 )
 
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+if IS_VERCEL:
+    COVER_DIR.mkdir(parents=True, exist_ok=True)
+    BANNER_DIR.mkdir(parents=True, exist_ok=True)
+    app.mount("/static/uploads", StaticFiles(directory=str(UPLOAD_DIR), check_dir=False), name="uploads")
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR), check_dir=False), name="static")
 
 # Semua POST/PUT/DELETE wajib membawa token CSRF yang cocok dengan session.
 app.include_router(auth.router, dependencies=[Depends(verify_csrf)])
