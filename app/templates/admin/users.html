@@ -1,0 +1,61 @@
+{% extends "admin/base.html" %}
+{% from "partials/macros.html" import icon, pagination %}
+{% from "admin/_drawer.html" import drawer with context %}
+{% block admin_title %}Users{% endblock %}
+
+{% block admin_content %}
+<div class="admin-title">
+  <div><h1>Users</h1><p>Kelola akun pengguna dan role. Selalu sisakan minimal satu admin.</p></div>
+  <div class="title-actions">
+    <button class="btn btn-primary" type="button" data-drawer="drawer" data-action="/admin/users/new" data-title="Tambah user" data-submit="Tambah user" data-fill='{"role": "user"}'>{{ icon('plus') }}Tambah user</button>
+  </div>
+</div>
+
+<form class="toolbar" method="get" action="/admin/users" role="search">
+  <div class="search-box">{{ icon('search') }}<input type="search" name="q" value="{{ q }}" placeholder="Cari username atau email" aria-label="Cari user" maxlength="80"></div>
+  {% if q %}<a class="btn btn-ghost btn-sm" href="/admin/users">Reset</a>{% endif %}
+</form>
+
+<div class="table-card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Bergabung</th><th></th></tr></thead>
+      <tbody>
+      {% for u in result.items %}
+        <tr>
+          <td><div class="cell-game" style="min-width:0"><span class="avatar">{{ u.username|initial }}</span><strong>{{ u.username }}{% if u.id == current_user.id %} <span class="dim" style="font-weight:500">(kamu)</span>{% endif %}</strong></div></td>
+          <td class="mono">{{ u.email }}</td>
+          <td><span class="badge badge-role-{{ u.role }}">{{ u.role }}</span></td>
+          <td class="mono dim">{{ u.created_at|tanggal }}</td>
+          <td>
+            <div class="cell-actions">
+              <button class="btn btn-sm" type="button" data-drawer="drawer" data-action="/admin/users/{{ u.id }}/edit" data-title="Edit user" data-submit="Simpan perubahan"
+                data-fill='{{ {"username": u.username, "email": u.email, "role": u.role}|tojson }}'>{{ icon('edit') }}Edit</button>
+              {% if u.id != current_user.id %}
+              <form method="post" action="/admin/users/{{ u.id }}/delete" data-confirm="Akun &quot;{{ u.username }}&quot; akan dihapus beserta ulasan, koleksi, dan pengajuannya." data-confirm-title="Hapus user?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-sm btn-danger" type="submit" aria-label="Hapus {{ u.username }}">{{ icon('trash') }}</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="table-empty">{% if q %}Tidak ada user yang cocok dengan "{{ q }}".{% else %}Belum ada user.{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-foot"><span>{{ result.total }} user</span>{{ pagination(result, '/admin/users', params) }}</div>
+</div>
+
+{% call drawer() %}
+  <div class="field"><label for="u-name">Username</label><input class="input" id="u-name" name="username" maxlength="30" required><span class="hint">3-30 karakter: huruf, angka, atau garis bawah.</span></div>
+  <div class="field"><label for="u-email">Email</label><input class="input" id="u-email" name="email" type="email" maxlength="120" required></div>
+  <div class="field">
+    <label for="u-role">Role</label>
+    <select class="select" id="u-role" name="role" style="width:100%"><option value="user">user</option><option value="admin">admin</option></select>
+  </div>
+  <div class="field"><label for="u-pass">Password</label><input class="input" id="u-pass" name="password" type="password" minlength="6" maxlength="64" autocomplete="new-password"><span class="hint">Wajib saat menambah user. Saat edit, kosongkan bila tidak ingin mengganti password.</span></div>
+{% endcall %}
+{% endblock %}

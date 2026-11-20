@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, plat_icon %}
+
+{% block title %}Katalog game{% if q %}: {{ q }}{% endif %} | AtlasPlay{% endblock %}
+
+{% block content %}
+<div class="wrap page-head">
+  <h1>Katalog game</h1>
+  <p>Cari berdasarkan judul atau developer, lalu saring per platform. Daftar langsung berubah saat kamu mengetik.</p>
+</div>
+
+<div class="wrap" data-catalog>
+  <form class="toolbar" method="get" action="/games" role="search" data-catalog-form>
+    <div class="input-group">
+      {{ icon('search') }}
+      <input class="input" type="search" name="q" value="{{ q }}" placeholder="Cari judul, developer, atau ringkasan" aria-label="Cari game" autocomplete="off">
+    </div>
+    <select class="select" name="sort" aria-label="Urutkan hasil">
+      {% for value, label in sort_options %}<option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <input type="hidden" name="platform" value="{{ platform_slug }}">
+    {% if current_developer %}<input type="hidden" name="developer" value="{{ current_developer.id }}">{% endif %}
+
+    <div class="pill-row" role="group" aria-label="Filter platform">
+      <a class="pill{% if not platform_slug %} is-active{% endif %}" href="/games{{ qs(params, platform=None, page=None) }}" data-platform-pill="" aria-pressed="{{ 'true' if not platform_slug else 'false' }}">Semua platform</a>
+      {% for platform, count in platforms %}
+      <a class="pill{% if platform.slug in platform_slug.split(',') %} is-active{% endif %}" href="/games{{ qs(params, platform=platform.slug, page=None) }}"
+         data-platform-pill="{{ platform.slug }}" aria-pressed="{{ 'true' if platform.slug in platform_slug.split(',') else 'false' }}" style="--c: {{ platform.badge_color }}">
+        <span class="pill__icon">{{ plat_icon(platform) }}</span>{{ platform.name }}<span class="pill__count">{{ count }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    <noscript><button class="btn btn-primary" type="submit">Terapkan filter</button></noscript>
+  </form>
+
+  <div class="results" data-results>
+    {% include "partials/_results.html" %}
+  </div>
+  <p class="sr-only" aria-live="polite" data-live></p>
+</div>
+{% endblock %}

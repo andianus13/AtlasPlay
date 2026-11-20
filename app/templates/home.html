@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, poster, plat_badges, plat_icon, star_svg with context %}
+
+{% block title %}AtlasPlay | Perpustakaan game lintas platform{% endblock %}
+
+
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+
+    <div class="hero__top">
+      <div class="hero__copy">
+        <h1 class="hero__title" id="hero-title" data-hero-in>Temukan game terbaik untuk petualangan berikutnya.</h1>
+        <p class="hero__lead" data-hero-in>Perpustakaan game lintas PC dan konsol yang dikurasi. Cari inspirasi, kenali developernya, lalu simpan yang menarik ke koleksimu.</p>
+      </div>
+
+      <dl class="hero__stats" data-hero-in>
+        <div><dt>Game</dt><dd>{{ stats.games|number_id }}</dd></div>
+        <div><dt>Platform</dt><dd>{{ stats.platforms|number_id }}</dd></div>
+        <div><dt>Ulasan pemain</dt><dd>{{ stats.reviews|number_id }}</dd></div>
+      </dl>
+    </div>
+
+    {% if featured %}
+    {# Hanya satu slide yang terlihat. Posisi dan visibilitas juga ditulis inline agar tetap benar walau CSS lama masih ada di cache. #}
+    <div class="showcase" data-showcase role="region" aria-roledescription="carousel" aria-label="Game unggulan">
+      <div class="showcase__slides">
+        {% for g in featured %}
+        <article class="slide{% if loop.first %} is-active{% endif %}" data-slide data-banner="{{ g.banner_src }}"
+                 style="position:absolute;inset:0;{% if not loop.first %}opacity:0;visibility:hidden;pointer-events:none;{% endif %}"
+                 aria-roledescription="slide" aria-label="{{ loop.index }} dari {{ featured|length }}: {{ g.title }}"{% if not loop.first %} aria-hidden="true"{% endif %}>
+          <img class="slide__img aspect-[21/9] w-full object-cover" src="{{ g.banner_src }}" alt="" width="1400" height="550"{% if not loop.first %} loading="lazy"{% endif %}>
+          <div class="slide__shade"></div>
+          <div class="slide__content">
+            <p class="slide__dev">{{ g.developer.name if g.developer else 'Developer belum diisi' }}{% if g.release_date %} · {{ g.release_date.year }}{% endif %}</p>
+            <h2 class="slide__title">{{ g.title }}</h2>
+            {% if g.short_summary %}<p class="slide__sum">{{ g.short_summary }}</p>{% endif %}
+            {{ plat_badges(g.platforms) }}
+            <div class="slide__actions">
+              <a class="btn btn-primary" href="/game/{{ g.slug }}">Lihat Detail</a>
+              {% if g.official_website_url %}
+              <a class="btn btn-ghost" href="{{ g.official_website_url }}" target="_blank" rel="noopener noreferrer">Website Resmi ↗</a>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+    </div>
+    {% endif %}
+
+    <div class="plat-cards" data-stagger>
+      {% for f in families %}
+      <a class="plat-card" data-reveal href="/games?platform={{ f.filter }}" style="--c: {{ f.color }}">
+        <span class="plat-card__ico">{{ plat_icon(f.icon) }}</span>
+        <span class="plat-card__name">{{ f.name }}</span>
+        <span class="plat-card__count">{{ f.count }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="trending-title">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <div>
+        <h2 id="trending-title">Tangga Teratas</h2>
+        <p>Game paling populer minggu ini, dihitung dari simpanan dan ulasan pemain.</p>
+      </div>
+      <a class="text-link" href="/games?sort=rating">Lihat semua</a>
+    </div>
+    <div class="poster-grid poster-grid--6" data-stagger>
+      {% for g in trending %}{{ poster(g, saved_ids, loop.index0, false, loop.index) }}{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="updated-title">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <div>
+        <h2 id="updated-title">Baru Ditambahkan</h2>
+        <p>Entri terbaru di perpustakaan, lengkap dengan spesifikasi dan tautan resmi.</p>
+      </div>
+      <a class="text-link" href="/games">Buka katalog</a>
+    </div>
+    <div class="poster-grid poster-grid--6" data-stagger>
+      {% for g in updated[:6] %}{{ poster(g, saved_ids, loop.index0) }}{% endfor %}
+    </div>
+
+    <div class="cta-band" data-reveal>
+      <div>
+        <h2>Belum ketemu game favoritmu?</h2>
+        <p>Kirim judulnya. Admin akan melengkapi informasi dan tautan resminya.</p>
+      </div>
+      <a class="btn btn-primary" href="/request-game">Ajukan game</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

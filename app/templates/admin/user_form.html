@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon %}
+{% from "admin/_ui.html" import field with context %}
+
+{% set editing = target is not none %}
+{% block title %}{{ 'Edit pengguna' if editing else 'Tambah pengguna' }}{% endblock %}
+{% block page_title %}{{ 'Edit pengguna' if editing else 'Tambah pengguna' }}{% endblock %}
+
+{% block content %}
+<div class="content-head">
+  <div>
+    <a class="crumb" href="/admin/users" style="margin-bottom:8px">{{ icon('arrow-left') }} Semua pengguna</a>
+    <h2>{{ ('Edit: ' ~ target.username) if editing else 'Akun baru' }}</h2>
+  </div>
+</div>
+
+<form class="form-layout" method="post" action="{{ '/admin/users/' ~ target.id ~ '/edit' if editing else '/admin/users/new' }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  {% if errors %}<div class="form-error" role="alert">Periksa kolom yang bertanda merah.</div>{% endif %}
+  <section class="form-section">
+    <div class="grid-2">
+      {{ field('username', 'Username', form, errors, required=true, maxlength=30, hint='Huruf, angka, atau garis bawah (3 sampai 30 karakter).') }}
+      {{ field('email', 'Email', form, errors, type='email', required=true, maxlength=120) }}
+    </div>
+    <div class="grid-2">
+      <div class="field{% if errors.role %} has-error{% endif %}">
+        <label for="f-role">Role</label>
+        <select class="select" id="f-role" name="role">
+          <option value="user"{% if form.role == 'user' %} selected{% endif %}>Pengguna</option>
+          <option value="admin"{% if form.role == 'admin' %} selected{% endif %}>Admin</option>
+        </select>
+        {% if errors.role %}<span class="field-error" role="alert">{{ errors.role }}</span>{% endif %}
+      </div>
+      <div class="field{% if errors.password %} has-error{% endif %}">
+        <label for="f-password">Password{% if not editing %} <span class="req">*</span>{% endif %}</label>
+        <input class="input" id="f-password" name="password" type="password" autocomplete="new-password" maxlength="64"{% if not editing %} required{% endif %}>
+        <span class="hint">{{ 'Kosongkan bila tidak ingin mengubah password.' if editing else 'Minimal 6 karakter.' }}</span>
+        {% if errors.password %}<span class="field-error" role="alert">{{ errors.password }}</span>{% endif %}
+      </div>
+    </div>
+  </section>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Simpan perubahan' if editing else 'Buat akun' }}</button>
+    <a class="btn btn-ghost" href="/admin/users">Batal</a>
+  </div>
+</form>
+{% endblock %}

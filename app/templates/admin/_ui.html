@@ -1,0 +1,46 @@
+{# Macro UI admin: field formulir, tombol hapus, kotak filter #}
+{% from "_macros.html" import icon %}
+
+{% macro field(name, label, form, errors, type='text', required=false, maxlength=none, placeholder='', hint='', autocomplete='off') -%}
+<div class="field{% if errors.get(name) %} has-error{% endif %}">
+  <label for="f-{{ name }}">{{ label }}{% if required %} <span class="req">*</span>{% endif %}</label>
+  <input class="input" id="f-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ form.get(name) or '' }}"
+         {%- if maxlength %} maxlength="{{ maxlength }}"{% endif %}{% if required %} required{% endif %}
+         {%- if placeholder %} placeholder="{{ placeholder }}"{% endif %} autocomplete="{{ autocomplete }}"
+         {%- if errors.get(name) %} aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>
+  {% if hint %}<span class="hint">{{ hint }}</span>{% endif %}
+  {% if errors.get(name) %}<span class="field-error" id="e-{{ name }}" role="alert">{{ errors.get(name) }}</span>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro textarea(name, label, form, errors, rows=5, maxlength=none, placeholder='', hint='') -%}
+<div class="field{% if errors.get(name) %} has-error{% endif %}">
+  <label for="f-{{ name }}">{{ label }}</label>
+  <textarea class="textarea" id="f-{{ name }}" name="{{ name }}" rows="{{ rows }}"
+            {%- if maxlength %} maxlength="{{ maxlength }}"{% endif %}{% if placeholder %} placeholder="{{ placeholder }}"{% endif %}
+            {%- if errors.get(name) %} aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>{{ form.get(name) or '' }}</textarea>
+  {% if hint %}<span class="hint">{{ hint }}</span>{% endif %}
+  {% if errors.get(name) %}<span class="field-error" id="e-{{ name }}" role="alert">{{ errors.get(name) }}</span>{% endif %}
+</div>
+{%- endmacro %}
+
+{# Tombol hapus dengan dialog konfirmasi (ditangani common.js lewat atribut data-confirm) #}
+{% macro delete_form(action, name, message, next='') -%}
+<form class="inline-form" method="post" action="{{ action }}" data-confirm="{{ message }}" data-confirm-title="Hapus {{ name }}?">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  <button class="btn btn-danger btn-sm" type="submit" aria-label="Hapus {{ name }}">{{ icon('trash') }}<span>Hapus</span></button>
+</form>
+{%- endmacro %}
+
+{% macro search_box(q, placeholder, action) -%}
+<form class="filters" method="get" action="{{ action }}" role="search">
+  <div class="input-group">
+    {{ icon('search') }}
+    <input class="input" type="search" name="q" value="{{ q }}" placeholder="{{ placeholder }}" aria-label="{{ placeholder }}" data-search-submit autocomplete="off">
+  </div>
+  {{ caller() if caller is defined }}
+  <button class="btn btn-ghost btn-sm" type="submit">Cari</button>
+  {% if q %}<a class="btn btn-quiet btn-sm" href="{{ action }}">Reset</a>{% endif %}
+</form>
+{%- endmacro %}

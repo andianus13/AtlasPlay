@@ -1,0 +1,126 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon %}
+
+{% block title %}Laporan{% endblock %}
+{% block page_title %}Laporan{% endblock %}
+
+{% block content %}
+{% set status_id = {'Pending': 'Menunggu', 'Approved': 'Disetujui', 'Rejected': 'Ditolak'} %}
+<div class="content-head">
+  <div><h2>Laporan</h2><p>Pilih laporan, atur filter, lalu unduh sebagai PDF atau cetak halaman ini.</p></div>
+  <div class="head-actions no-print">
+    <a class="btn btn-primary" href="/admin/reports/pdf{{ qs(params) }}">{{ icon('download') }} Download Laporan PDF</a>
+    <button class="btn btn-ghost" type="button" data-print>{{ icon('printer') }} Cetak Halaman</button>
+  </div>
+</div>
+
+<nav class="report-tabs" aria-label="Jenis laporan">
+  {% for n, title in report_titles.items() %}
+  <a class="pill{% if n == number %} is-active{% endif %}" href="/admin/reports?report={{ n }}"{% if n == number %} aria-current="page"{% endif %}>Laporan {{ n }}: {{ report_short[n] }}</a>
+  {% endfor %}
+</nav>
+
+<form class="report-filters" method="get" action="/admin/reports" data-autosubmit>
+  <input type="hidden" name="report" value="{{ number }}">
+  {% if number == 1 %}
+  <div class="field"><label for="r-platform">Platform</label>
+    <select class="select" id="r-platform" name="platform"><option value="">Semua platform</option>
+      {% for p in platforms %}<option value="{{ p.id }}"{% if params.platform == p.id %} selected{% endif %}>{{ p.name }}</option>{% endfor %}
+    </select></div>
+  <div class="field"><label for="r-developer">Developer</label>
+    <select class="select" id="r-developer" name="developer"><option value="">Semua developer</option>
+      {% for d in developers %}<option value="{{ d.id }}"{% if params.developer == d.id %} selected{% endif %}>{{ d.name }}</option>{% endfor %}
+    </select></div>
+  {% elif number == 2 %}
+  <div class="field"><label for="r-limit">Jumlah teratas</label>
+    <select class="select" id="r-limit" name="limit">{% for n in [5, 10, 20] %}<option value="{{ n }}"{% if params.limit == n %} selected{% endif %}>{{ n }} game</option>{% endfor %}</select></div>
+  {% else %}
+  <div class="field"><label for="r-status">Status pengajuan</label>
+    <select class="select" id="r-status" name="status"><option value="">Semua status</option>
+      {% for s in statuses %}<option value="{{ s }}"{% if params.status == s %} selected{% endif %}>{{ status_id[s] }}</option>{% endfor %}
+    </select></div>
+  <div class="field"><label for="r-from">Dari tanggal</label><input class="input" id="r-from" type="date" name="date_from" value="{{ params.date_from }}"></div>
+  <div class="field"><label for="r-to">Sampai tanggal</label><input class="input" id="r-to" type="date" name="date_to" value="{{ params.date_to }}"></div>
+  {% endif %}
+  <button class="btn btn-ghost" type="submit">Terapkan</button>
+  <a class="btn btn-quiet" href="/admin/reports?report={{ number }}">Reset</a>
+</form>
+
+<article class="paper" aria-labelledby="paper-title">
+  <header class="paper__head">
+    <div>
+      <div class="paper__brand">{{ app_name }}</div>
+      <h3 id="paper-title">{{ report_titles[number] }}</h3>
+      <p>Dibuat {{ generated_at|tanggal_waktu }} UTC oleh {{ current_user.username }}</p>
+    </div>
+  </header>
+
+  {% if number == 1 %}
+    <div class="summary"><span>Total game: <b>{{ data.games|length }}</b></span><span>Platform terwakili: <b>{{ data.by_platform|length }}</b></span><span>Developer terwakili: <b>{{ data.by_developer|length }}</b></span></div>
+    <h4>Jumlah game per platform</h4>
+    {% if data.by_platform %}
+    <table><thead><tr><th>Platform</th><th class="r">Jumlah game</th></tr></thead><tbody>
+      {% for name, count in data.by_platform %}<tr><td>{{ name }}</td><td class="r">{{ count }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% else %}<p class="none">Tidak ada data.</p>{% endif %}
+    <h4>Jumlah game per developer</h4>
+    {% if data.by_developer %}
+    <table><thead><tr><th>Developer</th><th class="r">Jumlah game</th></tr></thead><tbody>
+      {% for name, count in data.by_developer %}<tr><td>{{ name }}</td><td class="r">{{ count }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% else %}<p class="none">Tidak ada data.</p>{% endif %}
+    <h4>Daftar game</h4>
+    {% if data.games %}
+    <div class="table-scroll"><table><thead><tr><th class="c">No</th><th>Judul</th><th>Developer</th><th>Platform</th><th>Rilis</th><th class="c">Rating</th></tr></thead><tbody>
+      {% for g in data.games %}
+      <tr><td class="c">{{ loop.index }}</td><td>{{ g.title }}</td><td>{{ g.developer.name if g.developer else '-' }}</td><td>{% for p in g.platforms %}{{ p.short_name }}{% if not loop.last %}, {% endif %}{% endfor %}</td><td>{{ g.release_date|tanggal }}</td><td class="c">{{ g.average_rating|rating_text }}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+    {% else %}<p class="none">Tidak ada game pada filter ini.</p>{% endif %}
+
+  {% elif number == 2 %}
+    <h4>Paling banyak disimpan (top {{ data.limit }})</h4>
+    {% if data.most_saved %}
+    <div class="table-scroll"><table><thead><tr><th class="c">No</th><th>Judul</th><th>Developer</th><th class="c">Disimpan</th><th class="c">Ulasan</th><th class="c">Rating</th></tr></thead><tbody>
+      {% for g, saves, reviews in data.most_saved %}
+      <tr><td class="c">{{ loop.index }}</td><td>{{ g.title }}</td><td>{{ g.developer.name if g.developer else '-' }}</td><td class="c">{{ saves }}</td><td class="c">{{ reviews }}</td><td class="c">{{ g.average_rating|rating_text }}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+    {% else %}<p class="none">Belum ada data.</p>{% endif %}
+    <h4>Rating tertinggi (top {{ data.limit }})</h4>
+    {% if data.top_rated %}
+    <div class="table-scroll"><table><thead><tr><th class="c">No</th><th>Judul</th><th>Developer</th><th class="c">Rating</th><th class="c">Ulasan</th><th class="c">Disimpan</th></tr></thead><tbody>
+      {% for g, saves, reviews in data.top_rated %}
+      <tr><td class="c">{{ loop.index }}</td><td>{{ g.title }}</td><td>{{ g.developer.name if g.developer else '-' }}</td><td class="c">{{ '%.2f'|format(g.average_rating) }}</td><td class="c">{{ reviews }}</td><td class="c">{{ saves }}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+    {% else %}<p class="none">Belum ada game yang diulas.</p>{% endif %}
+    <p class="paper__foot">Rating dihitung dari rata-rata ulasan pengguna. Game tanpa ulasan tidak masuk daftar rating tertinggi.</p>
+
+  {% else %}
+    <div class="summary">
+      <span>Menunggu: <b>{{ data.status_counts.get('Pending', 0) }}</b></span>
+      <span>Disetujui: <b>{{ data.status_counts.get('Approved', 0) }}</b></span>
+      <span>Ditolak: <b>{{ data.status_counts.get('Rejected', 0) }}</b></span>
+      <span>Ulasan: <b>{{ data.comments|length }}</b></span>
+      <span>Rata-rata rating: <b>{{ data.average_rating or '-' }}</b></span>
+    </div>
+    <h4>Pengajuan game baru</h4>
+    {% if data.requests %}
+    <div class="table-scroll"><table><thead><tr><th>Tanggal</th><th>Pengaju</th><th>Judul game</th><th>Platform</th><th class="c">Status</th></tr></thead><tbody>
+      {% for r in data.requests %}
+      <tr><td>{{ r.submitted_at|tanggal }}</td><td>{{ r.user.username }}</td><td>{{ r.game_title }}</td><td>{{ r.platform_info or '-' }}</td><td class="c">{{ status_id.get(r.status, r.status) }}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+    {% else %}<p class="none">Tidak ada pengajuan pada filter ini.</p>{% endif %}
+    <h4>Ulasan pengguna</h4>
+    {% if data.comments %}
+    <div class="table-scroll"><table><thead><tr><th>Tanggal</th><th>Pengguna</th><th>Game</th><th class="c">Rating</th><th>Perangkat</th><th>Ringkasan ulasan</th></tr></thead><tbody>
+      {% for c in data.comments %}
+      <tr><td>{{ c.created_at|tanggal }}</td><td>{{ c.user.username }}</td><td>{{ c.game.title }}</td><td class="c">{{ c.rating }}</td><td>{{ c.device_tested or '-' }}</td><td>{{ c.content|truncate(90) }}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+    {% else %}<p class="none">Tidak ada ulasan pada periode ini.</p>{% endif %}
+  {% endif %}
+</article>
+{% endblock %}

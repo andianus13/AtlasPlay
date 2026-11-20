@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 550" width="1400" height="550">
+  <rect width="1400" height="550" fill="#131A26"/>
+  <path d="M0 550L520 0h260L260 550z" fill="#14B8A6" fill-opacity="0.08"/>
+  <path d="M640 550L1160 0h140L780 550z" fill="#F59E0B" fill-opacity="0.06"/>
+  <text x="700" y="285" text-anchor="middle" font-family="sans-serif" font-size="34" fill="#94A3B8">Banner belum tersedia</text>
+</svg>

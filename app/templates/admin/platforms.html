@@ -1,0 +1,50 @@
+{% extends "admin/base.html" %}
+{% from "partials/macros.html" import icon %}
+{% from "admin/_drawer.html" import drawer with context %}
+{% block admin_title %}Platforms{% endblock %}
+
+{% block admin_content %}
+<div class="admin-title">
+  <div><h1>Platforms</h1><p>Kategori konsol atau PC yang muncul sebagai filter dan lencana pada kartu poster.</p></div>
+  <div class="title-actions">
+    <button class="btn btn-primary" type="button" data-drawer="drawer" data-action="/admin/platforms/new" data-title="Tambah platform" data-submit="Tambah platform" data-fill='{"badge_color": "#14B8A6"}'>{{ icon('plus') }}Tambah platform</button>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>Platform</th><th>Lencana</th><th>Slug</th><th class="num">Game</th><th></th></tr></thead>
+      <tbody>
+      {% for p, n in rows %}
+        <tr>
+          <td><strong>{{ p.name }}</strong></td>
+          <td><span class="badge badge-platform" style="--bc: {{ p.badge_color }}">{{ p.short_name }}</span> <span class="mono dim" style="margin-left:8px">{{ p.badge_color }}</span></td>
+          <td class="mono dim">{{ p.slug }}</td>
+          <td class="num">{{ n }}</td>
+          <td>
+            <div class="cell-actions">
+              <button class="btn btn-sm" type="button" data-drawer="drawer" data-action="/admin/platforms/{{ p.id }}/edit" data-title="Edit platform" data-submit="Simpan perubahan"
+                data-fill='{{ {"name": p.name, "short_name": p.short_name, "badge_color": p.badge_color}|tojson }}'>{{ icon('edit') }}Edit</button>
+              <form method="post" action="/admin/platforms/{{ p.id }}/delete" data-confirm="Platform &quot;{{ p.name }}&quot; akan dilepas dari {{ n }} game. Game itu sendiri tidak dihapus." data-confirm-title="Hapus platform?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-sm btn-danger" type="submit" aria-label="Hapus {{ p.name }}">{{ icon('trash') }}</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="table-empty">Belum ada platform.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-foot"><span>{{ rows|length }} platform</span></div>
+</div>
+
+{% call drawer() %}
+  <div class="field"><label for="p-name">Nama platform</label><input class="input" id="p-name" name="name" maxlength="60" required placeholder="Contoh: PlayStation 5"></div>
+  <div class="field"><label for="p-short">Nama singkat</label><input class="input" id="p-short" name="short_name" maxlength="12" required placeholder="Contoh: PS5"><span class="hint">Tampil pada lencana di kartu poster (maks 12 karakter).</span></div>
+  <div class="field"><label for="p-color">Warna lencana</label><input class="input" id="p-color" name="badge_color" type="color" value="#14B8A6"></div>
+{% endcall %}
+{% endblock %}

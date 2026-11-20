@@ -1,0 +1,27 @@
+{% from "partials/macros.html" import icon, game_card, pagination with context %}
+<span hidden data-results-title data-results-title="{% if q %}Hasil untuk &quot;{{ q }}&quot;{% else %}Semua game{% endif %}: {{ app_name }}"></span>
+
+<div class="results-info">
+  <span>
+    {% if result.total %}Menampilkan <b>{{ result.first_index }}-{{ result.last_index }}</b> dari <b>{{ result.total }}</b> game{% else %}Tidak ada game yang cocok{% endif %}
+  </span>
+  <div class="active-tags">
+    {% if q %}<a class="tag-x" data-nav href="/games{{ qs(params, q='', page=none) }}" aria-label="Hapus kata kunci {{ q }}">"{{ q }}" {{ icon('x') }}</a>{% endif %}
+    {% if active_platform %}<a class="tag-x" data-nav href="/games{{ qs(params, platform='', page=none) }}" aria-label="Hapus filter {{ active_platform.name }}">{{ active_platform.name }} {{ icon('x') }}</a>{% endif %}
+    {% if active_developer %}<a class="tag-x" data-nav href="/games{{ qs(params, developer='', page=none) }}" aria-label="Hapus filter developer {{ active_developer.name }}">Developer: {{ active_developer.name }} {{ icon('x') }}</a>{% endif %}
+  </div>
+</div>
+
+{% if result.items %}
+<div class="poster-grid">
+  {% for g in result.items %}{{ game_card(g) }}{% endfor %}
+</div>
+{{ pagination(result, '/games', params, data_nav=True) }}
+{% else %}
+<div class="empty">
+  {{ icon('ghost') }}
+  <h3>Belum ada game yang cocok</h3>
+  <p>Coba kata kunci yang lebih pendek, ganti platform, atau hapus filter yang aktif. Game yang kamu cari belum terdata? Kamu bisa mengajukannya.</p>
+  <a class="btn btn-primary" href="/request-game">Ajukan game</a>
+</div>
+{% endif %}

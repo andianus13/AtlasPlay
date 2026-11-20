@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon, pager, stars with context %}
+{% from "admin/_ui.html" import delete_form with context %}
+
+{% block title %}Moderasi komentar{% endblock %}
+{% block page_title %}Moderasi komentar{% endblock %}
+
+{% block content %}
+<div class="content-head"><div><h2>Moderasi komentar</h2><p><span class="mono">{{ result.total|number_id }}</span> ulasan. Menghapus komentar otomatis menghitung ulang rating game.</p></div></div>
+
+<form class="filters" method="get" action="/admin/comments" role="search" data-autosubmit>
+  <div class="input-group">
+    {{ icon('search') }}
+    <input class="input" type="search" name="q" value="{{ q }}" placeholder="Cari game, pengguna, atau isi ulasan" aria-label="Cari komentar" data-search-submit autocomplete="off">
+  </div>
+  <select class="select" name="rating" aria-label="Filter rating">
+    <option value="">Semua rating</option>
+    {% for n in [5, 4, 3, 2, 1] %}<option value="{{ n }}"{% if rating == n %} selected{% endif %}>{{ n }} bintang</option>{% endfor %}
+  </select>
+  <button class="btn btn-ghost btn-sm" type="submit">Terapkan</button>
+  {% if q or rating %}<a class="btn btn-quiet btn-sm" href="/admin/comments">Reset</a>{% endif %}
+</form>
+
+{% if result.items %}
+<div class="table-wrap">
+  <table class="tbl">
+    <thead><tr><th scope="col">Tanggal</th><th scope="col">Game</th><th scope="col">Pengguna</th><th scope="col">Rating</th><th scope="col">Ulasan</th><th scope="col"><span class="sr-only">Aksi</span></th></tr></thead>
+    <tbody>
+      {% for c in result.items %}
+      <tr>
+        <td class="mono">{{ c.created_at|tanggal }}</td>
+        <td><a class="text-link" href="/game/{{ c.game.slug }}#ulasan-{{ c.id }}" target="_blank" rel="noopener">{{ c.game.title }}</a></td>
+        <td>{{ c.user.username }}</td>
+        <td><span class="num" style="color:var(--amber-hi)">{{ c.rating }}★</span></td>
+        <td><div class="cell-text">{{ c.content|truncate(160) }}{% if c.device_tested %}<span class="cell-sub mono">{{ c.device_tested }}</span>{% endif %}</div></td>
+        <td><div class="actions">{{ delete_form('/admin/comments/' ~ c.id ~ '/delete', 'komentar ' ~ c.user.username, 'Komentar dari ' ~ c.user.username ~ ' pada ' ~ c.game.title ~ ' akan dihapus dan rating game dihitung ulang.', '/admin/comments' ~ qs(params, page=result.page)) }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ pager(result, '/admin/comments', params, false) }}
+{% else %}
+<div class="empty">{{ icon('message') }}<h3>Tidak ada komentar yang cocok</h3><p>Ulasan pengguna akan muncul di sini.</p></div>
+{% endif %}
+{% endblock %}

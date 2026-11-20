@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | AtlasPlay{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="error-page">
+    <span class="error-page__code" aria-hidden="true">{{ code }}</span>
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+    <div class="flex flex-wrap gap-3 mt-3">
+      <a class="btn btn-primary" href="/">Kembali ke beranda</a>
+      <a class="btn btn-ghost" href="/games">Lihat semua game</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

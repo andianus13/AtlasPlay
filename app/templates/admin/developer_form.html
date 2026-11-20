@@ -1,0 +1,33 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon %}
+{% from "admin/_ui.html" import field, textarea with context %}
+
+{% set editing = developer is not none %}
+{% block title %}{{ 'Edit developer' if editing else 'Tambah developer' }}{% endblock %}
+{% block page_title %}{{ 'Edit developer' if editing else 'Tambah developer' }}{% endblock %}
+
+{% block content %}
+<div class="content-head">
+  <div>
+    <a class="crumb" href="/admin/developers" style="margin-bottom:8px">{{ icon('arrow-left') }} Semua developer</a>
+    <h2>{{ ('Edit: ' ~ developer.name) if editing else 'Developer baru' }}</h2>
+  </div>
+</div>
+
+<form class="form-layout" method="post" action="{{ '/admin/developers/' ~ developer.id ~ '/edit' if editing else '/admin/developers/new' }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  {% if errors %}<div class="form-error" role="alert">Periksa kolom yang bertanda merah.</div>{% endif %}
+  <section class="form-section">
+    {{ field('name', 'Nama developer', form, errors, required=true, maxlength=120) }}
+    <div class="grid-2">
+      {{ field('country', 'Negara', form, errors, maxlength=80, placeholder='Contoh: Jepang') }}
+      {{ field('website_url', 'Website', form, errors, type='url', maxlength=255, placeholder='https://') }}
+    </div>
+    {{ textarea('description', 'Deskripsi', form, errors, rows=5, maxlength=5000) }}
+  </section>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Simpan perubahan' if editing else 'Tambah developer' }}</button>
+    <a class="btn btn-ghost" href="/admin/developers">Batal</a>
+  </div>
+</form>
+{% endblock %}

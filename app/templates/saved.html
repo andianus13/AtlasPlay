@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, poster, pager with context %}
+
+{% block title %}Koleksiku | AtlasPlay{% endblock %}
+
+{% block content %}
+<div class="wrap page-head">
+  <h1>Koleksiku</h1>
+  <p>{% if result.total %}<span class="mono">{{ result.total|number_id }}</span> game yang kamu simpan. Buka detail game untuk melepasnya dari koleksi.{% else %}Tempat menyimpan game yang ingin kamu mainkan nanti.{% endif %}</p>
+</div>
+
+<div class="wrap" style="margin-top: 28px;">
+  {% if result.items %}
+  <div class="poster-grid" data-stagger>
+    {% for g in result.items %}{{ poster(g, saved_ids, loop.index0, true) }}{% endfor %}
+  </div>
+  {{ pager(result, '/my-saved', params, false) }}
+  {% else %}
+  <div class="empty">
+    {{ icon('bookmark') }}
+    <h3>Belum ada game di koleksimu</h3>
+    <p>Buka detail game, lalu tekan "Simpan ke Koleksi". Nanti ia muncul di sini.</p>
+    <a class="btn btn-primary btn-sm" href="/games">Buka katalog</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

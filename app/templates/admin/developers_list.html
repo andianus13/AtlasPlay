@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon, pager with context %}
+{% from "admin/_ui.html" import search_box, delete_form with context %}
+
+{% block title %}Developer{% endblock %}
+{% block page_title %}Developer{% endblock %}
+{% block topbar_actions %}<a class="btn btn-primary btn-sm" href="/admin/developers/new">{{ icon('plus') }} Tambah developer</a>{% endblock %}
+
+{% block content %}
+<div class="content-head"><div><h2>Kelola developer</h2><p><span class="mono">{{ result.total|number_id }}</span> developer terdaftar.</p></div></div>
+{{ search_box(q, 'Cari nama developer', '/admin/developers') }}
+
+{% if result.items %}
+<div class="table-wrap">
+  <table class="tbl">
+    <thead><tr><th scope="col">Developer</th><th scope="col">Negara</th><th scope="col">Website</th><th scope="col">Game</th><th scope="col"><span class="sr-only">Aksi</span></th></tr></thead>
+    <tbody>
+      {% for dev, game_count in result.items %}
+      <tr>
+        <td><b>{{ dev.name }}</b>{% if dev.description %}<span class="cell-sub">{{ dev.description|truncate(90) }}</span>{% endif %}</td>
+        <td>{{ dev.country or '-' }}</td>
+        <td>{% if dev.website_url %}<a class="text-link" href="{{ dev.website_url }}" target="_blank" rel="noopener noreferrer">Buka {{ icon('external', 'inline w-3.5 h-3.5') }}</a>{% else %}-{% endif %}</td>
+        <td class="num">{{ game_count }}</td>
+        <td>
+          <div class="actions">
+            <a class="btn btn-ghost btn-sm" href="/admin/developers/{{ dev.id }}/edit" aria-label="Edit {{ dev.name }}">{{ icon('edit') }}<span>Edit</span></a>
+            {{ delete_form('/admin/developers/' ~ dev.id ~ '/delete', dev.name, 'Developer “' ~ dev.name ~ '” akan dihapus. ' ~ (game_count ~ ' game miliknya tetap ada tetapi tanpa developer.' if game_count else 'Tidak ada game yang terpengaruh.')) }}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ pager(result, '/admin/developers', params, false) }}
+{% else %}
+<div class="empty">{{ icon('code') }}<h3>{% if q %}Tidak ada developer bernama “{{ q }}”{% else %}Belum ada developer{% endif %}</h3><p>Developer dipakai untuk mengelompokkan game di katalog.</p><a class="btn btn-primary btn-sm" href="/admin/developers/new">Tambah developer</a></div>
+{% endif %}
+{% endblock %}

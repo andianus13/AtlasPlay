@@ -1,0 +1,28 @@
+{% from "_macros.html" import icon, poster, pager with context %}
+<div class="results-meta">
+  <p>
+    <b data-count>{{ result.total|number_id }}</b> game
+    {%- if q %} untuk “{{ q }}”{% endif %}
+    {%- if platform_label %} di {{ platform_label }}{% endif %}
+    {%- if current_developer %} dari {{ current_developer.name }}{% endif %}
+  </p>
+  {% if current_developer %}
+  <span class="filter-tag">{{ current_developer.name }}
+    <a href="/games{{ qs(params, developer=None, page=None) }}" aria-label="Hapus filter developer {{ current_developer.name }}">{{ icon('close') }}</a>
+  </span>
+  {% endif %}
+</div>
+
+{% if result.items %}
+<div class="poster-grid" data-stagger>
+  {% for g in result.items %}{{ poster(g, saved_ids, loop.index0) }}{% endfor %}
+</div>
+{{ pager(result, '/games', params) }}
+{% else %}
+<div class="empty">
+  {{ icon('search') }}
+  <h3>Belum ada yang cocok</h3>
+  <p>{% if q %}Tidak ada hasil untuk “{{ q }}”. Coba kata kunci yang lebih pendek atau ganti filter platform.{% else %}Belum ada game pada filter ini. Coba pilih platform lain.{% endif %}</p>
+  <a class="btn btn-ghost btn-sm" href="/request-game">Ajukan game ini</a>
+</div>
+{% endif %}

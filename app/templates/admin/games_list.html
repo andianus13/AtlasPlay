@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon, pager, plat_badges with context %}
+{% from "admin/_ui.html" import search_box, delete_form with context %}
+
+{% block title %}Game{% endblock %}
+{% block page_title %}Game{% endblock %}
+{% block topbar_actions %}<a class="btn btn-primary btn-sm" href="/admin/games/new">{{ icon('plus') }} Tambah game</a>{% endblock %}
+
+{% block content %}
+<div class="content-head">
+  <div><h2>Kelola game</h2><p><span class="mono">{{ result.total|number_id }}</span> game di katalog.</p></div>
+</div>
+
+{{ search_box(q, 'Cari judul game', '/admin/games') }}
+
+{% if result.items %}
+<div class="table-wrap">
+  <table class="tbl">
+    <thead><tr><th scope="col">Game</th><th scope="col">Developer</th><th scope="col">Platform</th><th scope="col">Rating</th><th scope="col">Diperbarui</th><th scope="col"><span class="sr-only">Aksi</span></th></tr></thead>
+    <tbody>
+      {% for g in result.items %}
+      <tr>
+        <td>
+          <div class="cell-game">
+            <img class="aspect-[3/4] object-cover object-center" src="{{ g.cover_src }}" alt="" width="42" height="56" loading="lazy">
+            <div><b>{{ g.title }}{% if g.is_featured %} <span class="feat" title="Game unggulan di beranda" aria-label="Game unggulan">★</span>{% endif %}</b><small class="mono">/game/{{ g.slug }}</small></div>
+          </div>
+        </td>
+        <td>{{ g.developer.name if g.developer else '-' }}</td>
+        <td>{{ plat_badges(g.platforms) }}</td>
+        <td class="num">{{ g.average_rating|rating_text }}</td>
+        <td class="mono">{{ g.updated_at|tanggal }}</td>
+        <td>
+          <div class="actions">
+            <a class="btn btn-ghost btn-sm" href="/game/{{ g.slug }}" target="_blank" rel="noopener" aria-label="Lihat {{ g.title }} di situs">{{ icon('external') }}</a>
+            <a class="btn btn-ghost btn-sm" href="/admin/games/{{ g.id }}/edit" aria-label="Edit {{ g.title }}">{{ icon('edit') }}<span>Edit</span></a>
+            {{ delete_form('/admin/games/' ~ g.id ~ '/delete', g.title, 'Game “' ~ g.title ~ '” akan dihapus beserta ulasan, log simpan, dan gambar uploadnya. Tindakan ini tidak bisa dibatalkan.') }}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ pager(result, '/admin/games', params, false) }}
+{% else %}
+<div class="empty">
+  {{ icon('gamepad') }}
+  <h3>{% if q %}Tidak ada game bernama “{{ q }}”{% else %}Belum ada game{% endif %}</h3>
+  <p>{% if q %}Coba kata kunci lain.{% else %}Tambahkan game pertama untuk mengisi katalog.{% endif %}</p>
+  <a class="btn btn-primary btn-sm" href="/admin/games/new">Tambah game</a>
+</div>
+{% endif %}
+{% endblock %}

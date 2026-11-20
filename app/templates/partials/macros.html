@@ -1,0 +1,105 @@
+{# ===== Ikon (stroke, 24x24) ===== #}
+{% set ICONS = {
+  'search': '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  'heart': '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+  'external': '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  'arrow-right': '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  'arrow-left': '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  'menu': '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  'x': '<path d="M6 6l12 12M18 6 6 18"/>',
+  'plus': '<path d="M12 5v14M5 12h14"/>',
+  'edit': '<path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/>',
+  'trash': '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M9 7V4h6v3"/>',
+  'gamepad': '<path d="M6 8h12a4 4 0 0 1 4 4.2l-.5 4a2.5 2.5 0 0 1-4.3 1.4L15 15H9l-2.2 2.6a2.5 2.5 0 0 1-4.3-1.4l-.5-4A4 4 0 0 1 6 8z"/><path d="M8 10.5v3M6.5 12h3M16 11.5v.01M18 13v.01"/>',
+  'users': '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/>',
+  'code': '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',
+  'layers': '<path d="m12 3 9 5-9 5-9-5 9-5zM3 13l9 5 9-5"/>',
+  'chat': '<path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4.5 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
+  'inbox': '<path d="M4 13h4.5l1 2.5h5l1-2.5H20M4 13l2.2-7.2A1 1 0 0 1 7.1 5h9.8a1 1 0 0 1 .9.8L20 13v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-5z"/>',
+  'bookmark': '<path d="M6 4h12v16l-6-4-6 4V4z"/>',
+  'dashboard': '<path d="M4 4h7v9H4zM13 4h7v5h-7zM13 11h7v9h-7zM4 15h7v5H4z"/>',
+  'doc': '<path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v5h5M9 13h6M9 17h6"/>',
+  'printer': '<path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/>',
+  'download': '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+  'logout': '<path d="M10 4H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M15 8l4 4-4 4M19 12H9"/>',
+  'shield': '<path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3z"/>',
+  'check': '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  'chip': '<rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/>',
+  'send': '<path d="M4 12 20 4l-5 16-3-6.5L4 12zM12 13.5 20 4"/>',
+  'ghost': '<path d="M6 20V10a6 6 0 0 1 12 0v10l-2.5-2-2 2-1.5-2-1.5 2-2-2L6 20zM10 10v.01M14 10v.01"/>'
+} %}
+
+{% macro icon(name, size=0) -%}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"{% if size %} width="{{ size }}" height="{{ size }}"{% endif %}>{{ ICONS[name]|safe }}</svg>
+{%- endmacro %}
+
+{# ===== Bintang rating (terisi sesuai nilai dibulatkan) ===== #}
+{% macro stars(value) -%}
+{% set filled = (value or 0)|round(0, 'common')|int %}
+<span class="stars" role="img" aria-label="Rating {{ value|rating_text }} dari 5">
+  {%- for i in range(1, 6) -%}
+  <svg viewBox="0 0 24 24" fill="currentColor"{% if i > filled %} class="off"{% endif %} aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9L12 2.8z"/></svg>
+  {%- endfor -%}
+</span>
+{%- endmacro %}
+
+{# ===== Lencana platform ===== #}
+{% macro platform_badges(game, limit=4) -%}
+{% for p in game.platforms[:limit] -%}
+<span class="badge badge-platform" style="--bc: {{ p.badge_color }}">{{ p.short_name }}</span>
+{%- endfor %}
+{%- if game.platforms|length > limit %}<span class="badge">+{{ game.platforms|length - limit }}</span>{% endif %}
+{%- endmacro %}
+
+{# ===== Kartu poster 3:4. Membutuhkan: saved_ids, csrf_token (konteks halaman) ===== #}
+{% macro game_card(game, rank=None, removable=False) -%}
+{% set saved = game.id in saved_ids %}
+<article class="game-card" data-reveal{% if removable %} data-removable{% endif %}>
+  <div class="poster">
+    <img class="poster-img aspect-[3/4] object-cover object-center" src="{{ game.cover_src }}" alt="Poster {{ game.title }}" width="600" height="800" loading="lazy" decoding="async">
+    {% if rank %}<span class="poster-rank" aria-label="Peringkat {{ rank }}">{{ rank }}</span>{% endif %}
+    {% if game.average_rating %}
+    <span class="poster-rating rating-chip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9L12 2.8z"/></svg>{{ game.average_rating|rating_text }}</span>
+    {% endif %}
+    <div class="poster-badges">{{ platform_badges(game, 3) }}</div>
+    <div class="poster-peek" aria-hidden="true">
+      {% if game.has_pc_specs %}
+      <div class="peek-row"><span>RAM</span><b>{{ game.min_ram or '-' }}</b></div>
+      <div class="peek-row"><span>GPU</span><b>{{ game.min_gpu|compact_hw or '-' }}</b></div>
+      <div class="peek-row"><span>Storage</span><b>{{ game.storage_req or '-' }}</b></div>
+      {% else %}
+      <div class="peek-row"><span>Spesifikasi</span><b>belum ada</b></div>
+      {% endif %}
+      <span class="peek-cta">Lihat detail</span>
+    </div>
+  </div>
+  <div class="game-meta">
+    <a class="card-link" href="/game/{{ game.slug }}"><span class="game-title">{{ game.title }}</span></a>
+    <span class="game-dev">{{ game.developer.name if game.developer else 'Developer belum diisi' }}</span>
+  </div>
+  <form method="post" action="/game/{{ game.slug }}/save" data-save-form data-slug="{{ game.slug }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="save-btn{% if saved %} is-saved{% endif %}" data-save aria-pressed="{{ 'true' if saved else 'false' }}" aria-label="{{ 'Hapus dari koleksi' if saved else 'Simpan ke koleksi' }}">{{ icon('heart') }}</button>
+  </form>
+</article>
+{%- endmacro %}
+
+{# ===== Paginasi. data_nav=True => dicegat JS untuk muat tanpa reload ===== #}
+{% macro pagination(result, path, params, data_nav=False) -%}
+{% if result.pages > 1 %}
+<nav class="pager" aria-label="Halaman">
+  {% if result.has_prev %}<a href="{{ path }}{{ qs(params, page=result.page - 1) }}" rel="prev" aria-label="Halaman sebelumnya"{% if data_nav %} data-nav{% endif %}>{{ icon('arrow-left', 16) }}</a>{% else %}<span class="is-off">{{ icon('arrow-left', 16) }}</span>{% endif %}
+  {% for n in result.window() %}
+    {% if n is none %}<span class="gap">...</span>
+    {% elif n == result.page %}<span class="is-current" aria-current="page">{{ n }}</span>
+    {% else %}<a href="{{ path }}{{ qs(params, page=n) }}"{% if data_nav %} data-nav{% endif %}>{{ n }}</a>{% endif %}
+  {% endfor %}
+  {% if result.has_next %}<a href="{{ path }}{{ qs(params, page=result.page + 1) }}" rel="next" aria-label="Halaman berikutnya"{% if data_nav %} data-nav{% endif %}>{{ icon('arrow-right', 16) }}</a>{% else %}<span class="is-off">{{ icon('arrow-right', 16) }}</span>{% endif %}
+</nav>
+{% endif %}
+{%- endmacro %}
+
+{# ===== Pesan error field ===== #}
+{% macro err(errors, key) -%}
+{% if errors and errors.get(key) %}<span class="err" role="alert">{{ errors[key] }}</span>{% endif %}
+{%- endmacro %}

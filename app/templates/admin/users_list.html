@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon, pager with context %}
+{% from "admin/_ui.html" import search_box, delete_form with context %}
+
+{% block title %}Pengguna{% endblock %}
+{% block page_title %}Pengguna{% endblock %}
+{% block topbar_actions %}<a class="btn btn-primary btn-sm" href="/admin/users/new">{{ icon('plus') }} Tambah pengguna</a>{% endblock %}
+
+{% block content %}
+<div class="content-head"><div><h2>Kelola pengguna</h2><p><span class="mono">{{ result.total|number_id }}</span> akun terdaftar.</p></div></div>
+
+<form class="filters" method="get" action="/admin/users" role="search" data-autosubmit>
+  <div class="input-group">
+    {{ icon('search') }}
+    <input class="input" type="search" name="q" value="{{ q }}" placeholder="Cari username atau email" aria-label="Cari pengguna" data-search-submit autocomplete="off">
+  </div>
+  <select class="select" name="role" aria-label="Filter role">
+    <option value="">Semua role</option>
+    <option value="admin"{% if role == 'admin' %} selected{% endif %}>Admin</option>
+    <option value="user"{% if role == 'user' %} selected{% endif %}>Pengguna</option>
+  </select>
+  <button class="btn btn-ghost btn-sm" type="submit">Terapkan</button>
+  {% if q or role %}<a class="btn btn-quiet btn-sm" href="/admin/users">Reset</a>{% endif %}
+</form>
+
+{% if result.items %}
+<div class="table-wrap">
+  <table class="tbl">
+    <thead><tr><th scope="col">Pengguna</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Bergabung</th><th scope="col"><span class="sr-only">Aksi</span></th></tr></thead>
+    <tbody>
+      {% for u in result.items %}
+      <tr>
+        <td><div class="flex items-center gap-3"><span class="avatar">{{ u.username|initial }}</span><b>{{ u.username }}</b>{% if u.id == current_user.id %}<span class="chip">Kamu</span>{% endif %}</div></td>
+        <td class="mono">{{ u.email }}</td>
+        <td>{% if u.is_admin %}<span class="chip chip--admin">Admin</span>{% else %}<span class="chip">Pengguna</span>{% endif %}</td>
+        <td class="mono">{{ u.created_at|tanggal }}</td>
+        <td>
+          <div class="actions">
+            <a class="btn btn-ghost btn-sm" href="/admin/users/{{ u.id }}/edit" aria-label="Edit {{ u.username }}">{{ icon('edit') }}<span>Edit</span></a>
+            {% if u.id != current_user.id %}
+            {{ delete_form('/admin/users/' ~ u.id ~ '/delete', u.username, 'Akun “' ~ u.username ~ '” akan dihapus beserta ulasan, koleksi, dan pengajuannya. Rating game yang pernah diulasnya dihitung ulang.') }}
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ pager(result, '/admin/users', params, false) }}
+{% else %}
+<div class="empty">{{ icon('users') }}<h3>Tidak ada pengguna yang cocok</h3><p>Coba ubah kata kunci atau filter role.</p></div>
+{% endif %}
+{% endblock %}

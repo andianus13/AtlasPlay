@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Admin{% endblock %} | {{ app_name }} Admin</title>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0B0F17">
+  <link rel="icon" href="/static/favicon.png" type="image/png">
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['"Plus Jakarta Sans"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'] } } } };
+  </script>
+  <link rel="stylesheet" href="/static/css/app.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="/static/css/admin.css?v={{ asset_v }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="admin-body">
+<canvas class="atlas3d atlas3d--bg" data-atlas3d="bg" aria-hidden="true"></canvas>
+<script type="module" src="/static/js/atlas3d.js?v={{ asset_v }}"></script>
+{% from "_macros.html" import icon, brand_mark, brand_name %}
+{% set section = admin_section|default('') %}
+{% set groups = [
+  ('Ringkasan', [('dashboard', '/admin', 'Dashboard', 'dashboard')]),
+  ('File master', [
+     ('games', '/admin/games', 'Game', 'gamepad'),
+     ('developers', '/admin/developers', 'Developer', 'code'),
+     ('platforms', '/admin/platforms', 'Platform', 'monitor'),
+     ('users', '/admin/users', 'Pengguna', 'users')]),
+  ('Transaksi', [
+     ('requests', '/admin/requests', 'Pengajuan game', 'inbox'),
+     ('comments', '/admin/comments', 'Moderasi komentar', 'message'),
+     ('saved', '/admin/saved', 'Log simpan', 'bookmark')]),
+  ('Laporan', [('reports', '/admin/reports', 'Laporan dan PDF', 'file-text')]),
+] %}
+
+<a class="skip-link" href="#main">Lewati ke konten utama</a>
+{% if flashes %}
+<ul class="flash-list" id="flash-list" aria-label="Pemberitahuan">
+  {% for f in flashes %}<li data-type="{{ f.category }}">{{ f.message }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<div class="sidebar-scrim" data-sidebar-close></div>
+<div class="admin">
+  <aside class="sidebar" id="sidebar" aria-label="Navigasi admin">
+    <div class="sidebar__brand">
+      <a class="brand" href="/admin">{{ brand_mark() }}{{ brand_name() }}</a>
+      <span class="sidebar__tag">Admin</span>
+    </div>
+    {% for title, items in groups %}
+    <div class="side-group">{{ title }}</div>
+    {% for key, href, label, ico in items %}
+    <a class="side-link" href="{{ href }}"{% if section == key %} aria-current="page"{% endif %}>
+      {{ icon(ico) }}<span>{{ label }}</span>
+      {% if key == 'requests' and pending_count %}<span class="count" aria-label="{{ pending_count }} menunggu">{{ pending_count }}</span>{% endif %}
+    </a>
+    {% endfor %}
+    {% endfor %}
+
+    <div class="sidebar__foot">
+      <div class="sidebar__me">
+        <span class="avatar">{{ current_user.username|initial }}</span>
+        <div><b>{{ current_user.username }}</b><small>Administrator</small></div>
+      </div>
+      <a class="side-link" href="/">{{ icon('globe') }}<span>Lihat situs publik</span></a>
+      <form method="post" action="/logout">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="side-link w-full" type="submit" style="background:none;border:0;text-align:left">{{ icon('logout') }}<span>Keluar</span></button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="min-w-0">
+    <header class="topbar">
+      <button type="button" class="icon-btn topbar__burger" data-sidebar-open aria-label="Buka menu admin" aria-expanded="false" aria-controls="sidebar">{{ icon('menu') }}</button>
+      <h1>{% block page_title %}Admin{% endblock %}</h1>
+      <div class="topbar__spacer">{% block topbar_actions %}{% endblock %}</div>
+    </header>
+    <main id="main" class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="chart-tip" class="chart-tip" role="presentation"></div>
+
+<dialog id="confirm-dialog" class="modal" aria-labelledby="confirm-title">
+  <div class="modal__body">
+    <h3 id="confirm-title" data-confirm-title>Yakin ingin melanjutkan?</h3>
+    <p data-confirm-text></p>
+  </div>
+  <div class="modal__foot">
+    <button type="button" class="btn btn-ghost" data-confirm-cancel>Batal</button>
+    <button type="button" class="btn btn-danger-solid" data-confirm-ok>Ya, hapus</button>
+  </div>
+</dialog>
+
+<script src="/static/js/common.js?v={{ asset_v }}" defer></script>
+<script src="/static/js/admin.js?v={{ asset_v }}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

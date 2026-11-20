@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, brand_mark, brand_name %}
+
+{% block title %}Register | AtlasPlay{% endblock %}
+
+{% block backdrop %}{% endblock %}
+
+{% block scene3d %}
+<canvas class="atlas3d atlas3d--auth" data-atlas3d="auth" aria-hidden="true"></canvas>
+<script type="module" src="/static/js/atlas3d.js?v={{ asset_v }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="wrap auth">
+  <div class="auth__copy">
+    <h1>Mulai susun koleksi gamemu.</h1>
+    <p>Gratis. Cukup username, email, dan password.</p>
+    <ul class="auth__points">
+      <li>{{ icon('check') }}<span>Simpan game ke koleksi dengan satu klik.</span></li>
+      <li>{{ icon('check') }}<span>Beri rating bintang dan catat perangkat yang kamu uji.</span></li>
+      <li>{{ icon('check') }}<span>Kirim rekomendasi game baru langsung ke admin.</span></li>
+    </ul>
+  </div>
+
+  <form class="auth__card" method="post" action="/register" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <a class="auth__brand brand" href="/" aria-label="AtlasPlay">{{ brand_mark() }}{{ brand_name() }}</a>
+    <h2>Register</h2>
+    {% if errors %}<div class="form-error" role="alert">Periksa kembali isianmu, ada yang belum sesuai.</div>{% endif %}
+    <div class="field{% if errors.username %} has-error{% endif %}">
+      <label for="username">Username</label>
+      <input class="input" id="username" name="username" value="{{ form.username or '' }}" autocomplete="username" minlength="3" maxlength="30" required autofocus>
+      <span class="hint">3 sampai 30 karakter: huruf, angka, atau garis bawah.</span>
+      {% if errors.username %}<span class="field-error" role="alert">{{ errors.username }}</span>{% endif %}
+    </div>
+    <div class="field{% if errors.email %} has-error{% endif %}">
+      <label for="email">Email</label>
+      <input class="input" id="email" name="email" type="email" value="{{ form.email or '' }}" autocomplete="email" maxlength="120" required>
+      {% if errors.email %}<span class="field-error" role="alert">{{ errors.email }}</span>{% endif %}
+    </div>
+    <div class="field{% if errors.password %} has-error{% endif %}">
+      <label for="password">Password</label>
+      <input class="input" id="password" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="64" required>
+      <span class="hint">Minimal 6 karakter.</span>
+      {% if errors.password %}<span class="field-error" role="alert">{{ errors.password }}</span>{% endif %}
+    </div>
+    <div class="field{% if errors.password_confirm %} has-error{% endif %}">
+      <label for="password_confirm">Ulangi password</label>
+      <input class="input" id="password_confirm" name="password_confirm" type="password" autocomplete="new-password" required>
+      {% if errors.password_confirm %}<span class="field-error" role="alert">{{ errors.password_confirm }}</span>{% endif %}
+    </div>
+    <button class="btn btn-primary btn-block" type="submit">Buat akun</button>
+    <p class="auth__alt">Sudah punya akun? <a href="/login">Login</a></p>
+  </form>
+</div>
+{% endblock %}

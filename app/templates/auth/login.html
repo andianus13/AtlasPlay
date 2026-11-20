@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, brand_mark, brand_name %}
+
+{% block title %}Login | AtlasPlay{% endblock %}
+
+{% block backdrop %}{% endblock %}
+
+{% block scene3d %}
+<canvas class="atlas3d atlas3d--auth" data-atlas3d="auth" aria-hidden="true"></canvas>
+<script type="module" src="/static/js/atlas3d.js?v={{ asset_v }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="wrap auth">
+  <div class="auth__copy">
+    <h1>Selamat datang kembali.</h1>
+    <p>Masuk untuk membuka koleksi dan ulasanmu.</p>
+    <ul class="auth__points">
+      <li>{{ icon('bookmark') }}<span>Koleksi game pribadi yang menempel di akunmu.</span></li>
+      <li>{{ icon('message') }}<span>Tulis ulasan dan catat perangkat yang kamu pakai.</span></li>
+      <li>{{ icon('inbox') }}<span>Ajukan game yang belum ada dan pantau statusnya.</span></li>
+    </ul>
+  </div>
+
+  <form class="auth__card" method="post" action="/login" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{ next }}">
+    <a class="auth__brand brand" href="/" aria-label="AtlasPlay">{{ brand_mark() }}{{ brand_name() }}</a>
+    <h2>Login</h2>
+    {% if error %}<div class="form-error" role="alert">{{ error }}</div>{% endif %}
+    <div class="field">
+      <label for="identifier">Username atau email</label>
+      <input class="input" id="identifier" name="identifier" value="{{ form.identifier or '' }}" autocomplete="username" required autofocus>
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit">Login</button>
+    <p class="auth__alt">Belum punya akun? <a href="/register">Register</a></p>
+    <details class="demo-hint">
+      <summary>Akun demo</summary>
+      <p style="margin-top:8px">Admin: <code>admin</code> / <code>admin123</code><br>Pengguna: <code>user</code> / <code>user123</code></p>
+    </details>
+  </form>
+</div>
+{% endblock %}

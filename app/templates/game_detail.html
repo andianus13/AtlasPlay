@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, star_svg, stars, plat_badges, poster, status_chip with context %}
+
+{% block title %}{{ game.title }}: spesifikasi dan ulasan performa | AtlasPlay{% endblock %}
+{% block description %}{{ game.short_summary or ('Spesifikasi minimum dan rekomendasi ' ~ game.title) }}{% endblock %}
+
+{% block content %}
+{% set has_rec = game.rec_os or game.rec_cpu or game.rec_ram or game.rec_gpu %}
+<div class="wrap" style="padding-top: 28px;" data-ambient-src="{{ game.banner_src }}" data-ambient-alt="{{ game.cover_src }}">
+  <a class="crumb" href="/games">{{ icon('arrow-left') }} Kembali ke katalog</a>
+
+  <div class="detail-banner" data-parallax>
+    <img class="aspect-[21/9] w-full object-cover" src="{{ game.banner_src }}" alt="" width="1400" height="550">
+  </div>
+
+  <div class="detail-head">
+    <div class="detail-poster">
+      <img class="aspect-[3/4] w-full object-cover object-center" src="{{ game.cover_src }}" alt="Poster {{ game.title }}" width="600" height="800">
+    </div>
+    <div>
+      <h1>{{ game.title }}</h1>
+      <div class="detail-head__sub">
+        {% if game.developer %}<span>oleh <a class="dev" href="/games?developer={{ game.developer.id }}" title="Lihat game lain dari {{ game.developer.name }}">{{ game.developer.name }}</a></span>{% endif %}
+        {% if game.release_date %}<span>Rilis {{ game.release_date|tanggal }}</span>{% endif %}
+        {% if game.average_rating %}<span class="detail-head__rating">★ {{ game.average_rating|rating_text }} <span class="muted" style="font-weight:400">({{ comments|length }} ulasan)</span></span>{% endif %}
+      </div>
+      {{ plat_badges(game.platforms) }}
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="min-w-0">
+      {% if game.short_summary %}<p class="lead-summary">{{ game.short_summary }}</p>{% endif %}
+      {% if game.full_description %}<div class="prose">{{ game.full_description|paragraphs }}</div>{% endif %}
+
+      <section id="spesifikasi" class="spec-section" aria-labelledby="spek-title">
+        <div class="sec-head">
+          <h2 id="spek-title">Spesifikasi PC / Laptop</h2>
+          {% if game.has_pc_specs %}
+          <div class="tabs" role="tablist" aria-label="Tingkat spesifikasi" data-spec-switch="#specs-box">
+            <button type="button" role="tab" aria-selected="true" data-view="min">Minimum</button>
+            <button type="button" role="tab" aria-selected="false" data-view="rec">Rekomendasi</button>
+          </div>
+          {% endif %}
+        </div>
+        {% if game.has_pc_specs %}
+        <div class="specs" id="specs-box" data-view="min">
+          <dl class="spec-list spec-panel spec-panel--min" role="tabpanel">
+            {% for label, minimum, recommended in game.spec_rows %}
+            <div class="spec-row"><dt>{{ label }}</dt><dd class="{{ 'is-empty' if minimum == '-' }}">{{ minimum }}</dd></div>
+            {% endfor %}
+          </dl>
+          <dl class="spec-list spec-panel spec-panel--rec" role="tabpanel">
+            {% for label, minimum, recommended in game.spec_rows %}
+            <div class="spec-row"><dt>{{ label }}</dt><dd class="{{ 'is-empty' if recommended == '-' }}">{{ recommended }}</dd></div>
+            {% endfor %}
+            {% if not has_rec %}<p class="spec-note">Pengembang belum mempublikasikan spesifikasi rekomendasi.</p>{% endif %}
+          </dl>
+          <div class="spec-storage"><span>Ruang penyimpanan</span><b>{{ game.storage_req or '-' }}</b></div>
+        </div>
+        <p class="spec-disclaimer">Spesifikasi resmi bisa berubah setelah pembaruan. Cocokkan dengan website resmi sebelum membeli.</p>
+        {% else %}
+        <div class="empty" style="margin-top:0"><h3>Tidak ada spesifikasi PC</h3><p>Game ini belum punya data spesifikasi PC. Mungkin hanya tersedia untuk konsol.</p></div>
+        {% endif %}
+      </section>
+
+      <section id="ulasan" class="reviews-card" aria-labelledby="ulasan-title">
+        <div class="sec-head"><h2 id="ulasan-title">Ulasan &amp; Komentar Pemain</h2><span class="sec-count">{{ comments|length }}</span></div>
+
+        {% if comments %}
+        {% set total = comments|length %}
+        <div class="rating-box">
+          <div class="rating-box__avg">
+            <b>{{ game.average_rating|rating_text }}</b>
+            {{ stars(game.average_rating) }}
+            <span>dari {{ total }} ulasan</span>
+          </div>
+          <div class="dist" aria-label="Sebaran rating">
+            {% for star, count in distribution.items() %}
+            <div class="dist__row"><span>{{ star }}★</span><div class="dist__track"><div class="dist__fill" style="--w: {{ (count / total * 100)|round(1) }}%"></div></div><em>{{ count }}</em></div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if current_user %}
+        <form class="review-form" method="post" action="/game/{{ game.slug }}/comment" id="form-ulasan">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <h3>Tulis ulasan performa</h3>
+          <fieldset class="field" style="border:0;padding:0;margin:0">
+            <legend class="label">Rating <span class="req">*</span></legend>
+            <div class="stars-input">
+              {% for n in [5, 4, 3, 2, 1] %}
+              <input type="radio" name="rating" id="rate-{{ n }}" value="{{ n }}"{% if n == 1 %} required{% endif %}>
+              <label for="rate-{{ n }}" title="{{ n }} bintang"><span class="sr-only">{{ n }} bintang</span>{{ star_svg() }}</label>
+              {% endfor %}
+            </div>
+          </fieldset>
+          <div class="field">
+            <label for="device_tested">Perangkat yang kamu pakai</label>
+            <input class="input" id="device_tested" name="device_tested" maxlength="160" placeholder="Contoh: Laptop RTX 3050 / RAM 16GB">
+            <span class="hint">Tulis GPU dan RAM supaya ulasanmu berguna bagi pemilik laptop serupa.</span>
+          </div>
+          <div class="field">
+            <label for="content">Ulasan <span class="req">*</span></label>
+            <textarea class="textarea" id="content" name="content" minlength="10" maxlength="2000" required placeholder="Bagaimana FPS, suhu, dan pengaturan grafis yang kamu pakai?" data-counter="#content-count"></textarea>
+            <span class="counter" id="content-count">0 / 2000</span>
+          </div>
+          <div><button class="btn btn-primary" type="submit">Kirim ulasan</button></div>
+        </form>
+        {% else %}
+        <div class="login-cta">
+          <span>Masuk untuk menulis ulasan dan menyimpan game ini.</span>
+          <a class="btn btn-primary btn-sm" href="/login?next={{ (current_path ~ '#ulasan')|urlencode }}">Login untuk mengulas</a>
+        </div>
+        {% endif %}
+
+        {% if comments|length > 1 %}
+        <div class="sort-links" role="group" aria-label="Urutkan ulasan">
+          {% for key, label in comment_sorts.items() %}
+          <a href="/game/{{ game.slug }}?urut={{ key }}#ulasan"{% if key == urut %} aria-current="true"{% endif %}>{{ label }}</a>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% for c in comments %}
+        <article class="review" id="ulasan-{{ c.id }}" data-reveal style="--i: {{ [loop.index0, 6]|min }}">
+          <span class="avatar avatar--lg">{{ c.user.username|initial }}</span>
+          <div>
+            <div class="review__top">
+              <b>{{ c.user.username }}</b>
+              {{ stars(c.rating) }}
+              <time datetime="{{ c.created_at.isoformat() }}">{{ c.created_at|tanggal }}</time>
+              {% if current_user and (current_user.id == c.user_id or current_user.is_admin) %}
+              <form class="review__del" method="post" action="/comment/{{ c.id }}/delete" data-confirm="Ulasan ini akan dihapus dan rating game dihitung ulang." data-confirm-title="Hapus ulasan?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-quiet btn-sm" type="submit" aria-label="Hapus ulasan dari {{ c.user.username }}">{{ icon('trash') }} Hapus</button>
+              </form>
+              {% endif %}
+            </div>
+            {% if c.device_tested %}<span class="review__device">{{ c.device_tested }}</span>{% endif %}
+            <p>{{ c.content }}</p>
+          </div>
+        </article>
+        {% else %}
+        <div class="empty"><h3>Belum ada ulasan</h3><p>Jadilah yang pertama membagikan performa game ini di perangkatmu.</p></div>
+        {% endfor %}
+      </section>
+
+      {% if more_from_developer %}
+      <section style="margin-top: 56px;" aria-labelledby="more-title">
+        <div class="block-title"><h2 id="more-title">Game lain dari {{ game.developer.name }}</h2></div>
+        <div class="poster-grid" data-stagger>
+          {% for g in more_from_developer %}{{ poster(g, saved_ids, loop.index0) }}{% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </div>
+
+    <aside class="aside" aria-label="Aksi dan ringkasan">
+      <div class="aside-card">
+        <div class="aside-actions">
+          {% if game.official_website_url %}
+          <a class="btn btn-primary" href="{{ game.official_website_url }}" target="_blank" rel="noopener noreferrer">Kunjungi Website Resmi ↗</a>
+          {% else %}
+          <p class="muted text-sm">Website resmi belum diisi untuk game ini.</p>
+          {% endif %}
+
+          {% if current_user %}
+          <form method="post" action="/game/{{ game.slug }}/save" data-save-form>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="next" value="/game/{{ game.slug }}">
+            <button type="submit" class="btn btn-ghost btn-save" data-save-slug="{{ game.slug }}" data-title="{{ game.title }}" aria-pressed="{{ 'true' if is_saved else 'false' }}">
+              {{ icon('heart') }}<span data-save-label>{{ 'Tersimpan di Koleksi' if is_saved else 'Simpan ke Koleksi' }}</span>
+            </button>
+          </form>
+          {% else %}
+          <a class="btn btn-ghost" href="/login?next={{ current_path|urlencode }}">{{ icon('heart') }} Simpan ke Koleksi</a>
+          {% endif %}
+        </div>
+
+        <dl class="info-list">
+          <div><dt>Developer</dt><dd>{% if game.developer %}<a href="/games?developer={{ game.developer.id }}" class="text-link">{{ game.developer.name }}</a>{% else %}-{% endif %}</dd></div>
+          {% if game.developer and game.developer.country %}<div><dt>Negara</dt><dd>{{ game.developer.country }}</dd></div>{% endif %}
+          <div><dt>Tanggal rilis</dt><dd>{{ game.release_date|tanggal }}</dd></div>
+          <div><dt>Platform</dt><dd>{% for p in game.platforms %}{{ p.name }}{% if not loop.last %}, {% endif %}{% endfor %}</dd></div>
+          <div><dt>Rating</dt><dd>{% if game.average_rating %}★ {{ game.average_rating|rating_text }} / 5{% else %}Belum ada{% endif %}</dd></div>
+          <div><dt>Jumlah ulasan</dt><dd>{{ comments|length }}</dd></div>
+          <div><dt>Total disimpan</dt><dd><span data-saved-count>{{ saved_count }}</span> pengguna</dd></div>
+        </dl>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

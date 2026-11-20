@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon %}
+{% from "admin/_ui.html" import delete_form with context %}
+
+{% block title %}Platform{% endblock %}
+{% block page_title %}Platform{% endblock %}
+{% block topbar_actions %}<a class="btn btn-primary btn-sm" href="/admin/platforms/new">{{ icon('plus') }} Tambah platform</a>{% endblock %}
+
+{% block content %}
+<div class="content-head"><div><h2>Kelola platform</h2><p>Kategori PC dan konsol yang dipakai untuk filter dan badge poster.</p></div></div>
+
+{% if rows %}
+<div class="table-wrap">
+  <table class="tbl">
+    <thead><tr><th scope="col">Platform</th><th scope="col">Badge</th><th scope="col">Slug filter</th><th scope="col">Game</th><th scope="col"><span class="sr-only">Aksi</span></th></tr></thead>
+    <tbody>
+      {% for p, count in rows %}
+      <tr>
+        <td><b><span class="color-dot" style="--c: {{ p.badge_color }}"></span>{{ p.name }}</b></td>
+        <td><span class="plat" style="--c: {{ p.badge_color }}">{{ p.short_name }}</span> <span class="cell-sub mono" style="display:inline;margin-left:6px">{{ p.badge_color }}</span></td>
+        <td class="mono">?platform={{ p.slug }}</td>
+        <td class="num">{{ count }}</td>
+        <td>
+          <div class="actions">
+            <a class="btn btn-ghost btn-sm" href="/admin/platforms/{{ p.id }}/edit" aria-label="Edit {{ p.name }}">{{ icon('edit') }}<span>Edit</span></a>
+            {{ delete_form('/admin/platforms/' ~ p.id ~ '/delete', p.name, 'Platform “' ~ p.name ~ '” akan dilepas dari ' ~ count ~ ' game. Game itu sendiri tidak dihapus.') }}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty">{{ icon('monitor') }}<h3>Belum ada platform</h3><p>Tambahkan platform agar game bisa dikelompokkan.</p><a class="btn btn-primary btn-sm" href="/admin/platforms/new">Tambah platform</a></div>
+{% endif %}
+{% endblock %}

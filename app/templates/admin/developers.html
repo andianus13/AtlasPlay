@@ -1,0 +1,56 @@
+{% extends "admin/base.html" %}
+{% from "partials/macros.html" import icon, pagination %}
+{% from "admin/_drawer.html" import drawer with context %}
+{% block admin_title %}Developers{% endblock %}
+
+{% block admin_content %}
+<div class="admin-title">
+  <div><h1>Developers</h1><p>Studio atau pembuat game. Menghapus developer tidak menghapus game miliknya.</p></div>
+  <div class="title-actions">
+    <button class="btn btn-primary" type="button" data-drawer="drawer" data-action="/admin/developers/new" data-title="Tambah developer" data-submit="Tambah developer">{{ icon('plus') }}Tambah developer</button>
+  </div>
+</div>
+
+<form class="toolbar" method="get" action="/admin/developers" role="search">
+  <div class="search-box">{{ icon('search') }}<input type="search" name="q" value="{{ q }}" placeholder="Cari nama developer" aria-label="Cari developer" maxlength="80"></div>
+  {% if q %}<a class="btn btn-ghost btn-sm" href="/admin/developers">Reset</a>{% endif %}
+</form>
+
+<div class="table-card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>Developer</th><th>Negara</th><th>Website</th><th class="num">Game</th><th></th></tr></thead>
+      <tbody>
+      {% for d, n in result.items %}
+        <tr>
+          <td><strong>{{ d.name }}</strong>{% if d.description %}<div class="cell-clip dim" style="max-width:380px;font-size:13px">{{ d.description }}</div>{% endif %}</td>
+          <td>{{ d.country or '-' }}</td>
+          <td>{% if d.website_url %}<a href="{{ d.website_url }}" target="_blank" rel="noopener noreferrer" class="mono" style="color:var(--teal)">{{ d.website_url|replace('https://', '')|replace('http://', '')|truncate(30, True, '...') }}</a>{% else %}-{% endif %}</td>
+          <td class="num">{% if n %}<a href="/games?developer={{ d.id }}">{{ n }}</a>{% else %}0{% endif %}</td>
+          <td>
+            <div class="cell-actions">
+              <button class="btn btn-sm" type="button" data-drawer="drawer" data-action="/admin/developers/{{ d.id }}/edit" data-title="Edit developer" data-submit="Simpan perubahan"
+                data-fill='{{ {"name": d.name, "country": d.country or "", "website_url": d.website_url or "", "description": d.description or ""}|tojson }}'>{{ icon('edit') }}Edit</button>
+              <form method="post" action="/admin/developers/{{ d.id }}/delete" data-confirm="Developer &quot;{{ d.name }}&quot; akan dihapus. {{ n }} game miliknya tetap ada tanpa developer." data-confirm-title="Hapus developer?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-sm btn-danger" type="submit" aria-label="Hapus {{ d.name }}">{{ icon('trash') }}</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="table-empty">{% if q %}Tidak ada developer bernama "{{ q }}".{% else %}Belum ada developer.{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-foot"><span>{{ result.total }} developer</span>{{ pagination(result, '/admin/developers', params) }}</div>
+</div>
+
+{% call drawer() %}
+  <div class="field"><label for="d-name">Nama developer</label><input class="input" id="d-name" name="name" maxlength="120" required></div>
+  <div class="field"><label for="d-country">Negara</label><input class="input" id="d-country" name="country" maxlength="80"></div>
+  <div class="field"><label for="d-website">Website</label><input class="input" id="d-website" name="website_url" type="url" maxlength="255" placeholder="https://"></div>
+  <div class="field"><label for="d-desc">Deskripsi</label><textarea class="textarea" id="d-desc" name="description" maxlength="2000" data-counter></textarea><span class="char-count" data-counter-for="d-desc"></span></div>
+{% endcall %}
+{% endblock %}

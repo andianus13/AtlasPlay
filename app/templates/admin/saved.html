@@ -1,0 +1,31 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon, pager with context %}
+{% from "admin/_ui.html" import search_box with context %}
+
+{% block title %}Log simpan{% endblock %}
+{% block page_title %}Log simpan{% endblock %}
+
+{% block content %}
+<div class="content-head"><div><h2>Log game tersimpan</h2><p><span class="mono">{{ result.total|number_id }}</span> aktivitas simpan oleh pengguna. Data ini hanya untuk dipantau.</p></div></div>
+{{ search_box(q, 'Cari game atau pengguna', '/admin/saved') }}
+
+{% if result.items %}
+<div class="table-wrap">
+  <table class="tbl">
+    <thead><tr><th scope="col">Waktu</th><th scope="col">Pengguna</th><th scope="col">Game</th></tr></thead>
+    <tbody>
+      {% for s in result.items %}
+      <tr>
+        <td class="mono">{{ s.saved_at|tanggal_waktu }}</td>
+        <td>{{ s.user.username }}</td>
+        <td><a class="text-link" href="/game/{{ s.game.slug }}" target="_blank" rel="noopener">{{ s.game.title }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ pager(result, '/admin/saved', params, false) }}
+{% else %}
+<div class="empty">{{ icon('bookmark') }}<h3>Belum ada aktivitas simpan</h3><p>Saat pengguna menyimpan game, riwayatnya muncul di sini.</p></div>
+{% endif %}
+{% endblock %}

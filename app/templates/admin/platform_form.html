@@ -1,0 +1,40 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon %}
+{% from "admin/_ui.html" import field with context %}
+
+{% set editing = platform is not none %}
+{% block title %}{{ 'Edit platform' if editing else 'Tambah platform' }}{% endblock %}
+{% block page_title %}{{ 'Edit platform' if editing else 'Tambah platform' }}{% endblock %}
+
+{% block content %}
+<div class="content-head">
+  <div>
+    <a class="crumb" href="/admin/platforms" style="margin-bottom:8px">{{ icon('arrow-left') }} Semua platform</a>
+    <h2>{{ ('Edit: ' ~ platform.name) if editing else 'Platform baru' }}</h2>
+  </div>
+</div>
+
+<form class="form-layout" method="post" action="{{ '/admin/platforms/' ~ platform.id ~ '/edit' if editing else '/admin/platforms/new' }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  {% if errors %}<div class="form-error" role="alert">Periksa kolom yang bertanda merah.</div>{% endif %}
+  <section class="form-section">
+    <div class="grid-2">
+      {{ field('name', 'Nama platform', form, errors, required=true, maxlength=60, placeholder='Contoh: PlayStation 5') }}
+      {{ field('short_name', 'Nama singkat badge', form, errors, maxlength=12, placeholder='Contoh: PS5', hint='Tampil di poster. Kosongkan untuk memakai 12 huruf pertama nama.') }}
+    </div>
+    <div class="field{% if errors.badge_color %} has-error{% endif %}">
+      <label for="f-badge_color">Warna badge</label>
+      <div class="color-field" data-color-sync>
+        <input type="color" value="{{ form.badge_color or '#14B8A6' }}" aria-label="Pilih warna">
+        <input class="input" id="f-badge_color" name="badge_color" type="text" value="{{ form.badge_color or '#14B8A6' }}" maxlength="7" style="max-width:150px" spellcheck="false">
+        <span class="plat" data-color-sample style="--c: {{ form.badge_color or '#14B8A6' }}" aria-label="Contoh badge"><span data-color-sample-text>{{ form.short_name or form.name or 'PC' }}</span></span>
+      </div>
+      {% if errors.badge_color %}<span class="field-error" role="alert">{{ errors.badge_color }}</span>{% endif %}
+    </div>
+  </section>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Simpan perubahan' if editing else 'Tambah platform' }}</button>
+    <a class="btn btn-ghost" href="/admin/platforms">Batal</a>
+  </div>
+</form>
+{% endblock %}

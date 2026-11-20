@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon, pager, status_chip with context %}
+{% from "admin/_ui.html" import delete_form with context %}
+
+{% block title %}Pengajuan game{% endblock %}
+{% block page_title %}Pengajuan game{% endblock %}
+
+{% block content %}
+<div class="content-head"><div><h2>Pengajuan game dari pengguna</h2><p>Tinjau judul yang diusulkan, lalu setujui atau tolak.</p></div></div>
+
+<div class="pill-row" style="margin-bottom: 18px" role="group" aria-label="Filter status">
+  <a class="pill{% if not status %} is-active{% endif %}" href="/admin/requests">Semua <span class="pill__count">{{ counts.values()|sum }}</span></a>
+  {% for s in statuses %}
+  <a class="pill{% if s == status %} is-active{% endif %}" href="/admin/requests?status={{ s }}">{{ s|status_label }} <span class="pill__count">{{ counts[s] }}</span></a>
+  {% endfor %}
+</div>
+
+{% if result.items %}
+<div class="table-wrap">
+  <table class="tbl">
+    <thead><tr><th scope="col">Tanggal</th><th scope="col">Game yang diajukan</th><th scope="col">Pengaju</th><th scope="col">Status</th><th scope="col">Ubah status</th><th scope="col"><span class="sr-only">Aksi</span></th></tr></thead>
+    <tbody>
+      {% for r in result.items %}
+      <tr>
+        <td class="mono">{{ r.submitted_at|tanggal }}</td>
+        <td>
+          <div class="cell-text"><b>{{ r.game_title }}</b>
+            {% if r.platform_info %}<span class="cell-sub">Platform: {{ r.platform_info }}</span>{% endif %}
+            {% if r.notes %}<span class="cell-sub">{{ r.notes|truncate(140) }}</span>{% endif %}
+            {% if r.official_link %}<a class="text-link" style="font-size:.82rem" href="{{ r.official_link }}" target="_blank" rel="noopener noreferrer">Tautan resmi {{ icon('external', 'inline w-3.5 h-3.5') }}</a>{% endif %}
+          </div>
+        </td>
+        <td>{{ r.user.username }}</td>
+        <td>{{ status_chip(r.status) }}</td>
+        <td>
+          <form class="inline-form" method="post" action="/admin/requests/{{ r.id }}/status">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="next" value="/admin/requests{{ qs(params, page=result.page) }}">
+            {% if r.status != 'Approved' %}<button class="btn btn-ghost btn-sm" name="status" value="Approved" type="submit" aria-label="Setujui {{ r.game_title }}">{{ icon('check') }}<span>Setujui</span></button>{% endif %}
+            {% if r.status != 'Rejected' %}<button class="btn btn-ghost btn-sm" name="status" value="Rejected" type="submit" aria-label="Tolak {{ r.game_title }}">{{ icon('close') }}<span>Tolak</span></button>{% endif %}
+            {% if r.status != 'Pending' %}<button class="btn btn-quiet btn-sm" name="status" value="Pending" type="submit" aria-label="Kembalikan {{ r.game_title }} ke menunggu">Menunggu</button>{% endif %}
+          </form>
+        </td>
+        <td><div class="actions">{{ delete_form('/admin/requests/' ~ r.id ~ '/delete', r.game_title, 'Pengajuan “' ~ r.game_title ~ '” akan dihapus.', '/admin/requests') }}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ pager(result, '/admin/requests', params, false) }}
+{% else %}
+<div class="empty">{{ icon('inbox') }}<h3>Tidak ada pengajuan{% if status %} berstatus {{ status|status_label|lower }}{% endif %}</h3><p>Pengajuan dari pengguna akan muncul di sini.</p></div>
+{% endif %}
+{% endblock %}

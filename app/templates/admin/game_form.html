@@ -1,0 +1,129 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon %}
+{% from "admin/_ui.html" import field, textarea with context %}
+
+{% set editing = game is not none %}
+{% block title %}{{ 'Edit game' if editing else 'Tambah game' }}{% endblock %}
+{% block page_title %}{{ 'Edit game' if editing else 'Tambah game' }}{% endblock %}
+
+{% block content %}
+<div class="content-head">
+  <div>
+    <a class="crumb" href="/admin/games" style="margin-bottom:8px">{{ icon('arrow-left') }} Semua game</a>
+    <h2>{{ ('Edit: ' ~ game.title) if editing else 'Game baru' }}</h2>
+    <p>Kolom bertanda <span class="req" style="color:var(--amber-hi)">*</span> wajib diisi.</p>
+  </div>
+</div>
+
+<form class="form-layout" method="post" enctype="multipart/form-data" action="{{ '/admin/games/' ~ game.id ~ '/edit' if editing else '/admin/games/new' }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  {% if errors %}<div class="form-error" role="alert">Ada {{ errors|length }} isian yang perlu diperbaiki. Periksa kolom yang bertanda merah.</div>{% endif %}
+
+  <section class="form-section" aria-labelledby="s-info">
+    <h3 id="s-info">Informasi dasar</h3>
+    {{ field('title', 'Judul game', form, errors, required=true, maxlength=160, placeholder='Contoh: Elden Ring') }}
+    {{ field('short_summary', 'Ringkasan singkat', form, errors, maxlength=300, hint='Satu atau dua kalimat. Tampil di hasil pencarian dan bagian atas halaman detail.') }}
+    {{ textarea('full_description', 'Deskripsi lengkap', form, errors, rows=8, hint='Pisahkan paragraf dengan baris kosong.') }}
+    <div class="grid-2">
+      {{ field('release_date', 'Tanggal rilis', form, errors, type='date') }}
+      <div class="field{% if errors.developer_id %} has-error{% endif %}">
+        <label for="f-developer_id">Developer</label>
+        <select class="select" id="f-developer_id" name="developer_id">
+          <option value="">Tanpa developer</option>
+          {% for d in developers %}<option value="{{ d.id }}"{% if (form.developer_id|string) == (d.id|string) %} selected{% endif %}>{{ d.name }}</option>{% endfor %}
+        </select>
+        {% if errors.developer_id %}<span class="field-error" role="alert">{{ errors.developer_id }}</span>{% endif %}
+        <span class="hint">Belum ada developernya? <a class="text-link" href="/admin/developers/new">Tambah developer</a> dulu.</span>
+      </div>
+    </div>
+    {{ field('official_website_url', 'Website resmi', form, errors, type='url', maxlength=255, placeholder='https://', hint='Tombol “Kunjungi Website Resmi” di halaman detail membuka alamat ini di tab baru.') }}
+    <label class="check"><input type="checkbox" name="is_featured"{% if form.is_featured %} checked{% endif %}><span>Tampilkan sebagai game unggulan di hero beranda</span></label>
+  </section>
+
+  <section class="form-section" aria-labelledby="s-plat">
+    <h3 id="s-plat">Platform <span class="req" style="color:var(--amber-hi)">*</span></h3>
+    <div class="field{% if errors.platform_ids %} has-error{% endif %}">
+      <div class="platform-picks" role="group" aria-label="Platform yang didukung">
+        {% for p in platforms %}
+        <label><input type="checkbox" name="platform_ids" value="{{ p.id }}"{% if p.id in (form.platform_ids or []) %} checked{% endif %}><span class="color-dot" style="--c: {{ p.badge_color }}; margin:0"></span>{{ p.name }}</label>
+        {% endfor %}
+      </div>
+      {% if errors.platform_ids %}<span class="field-error" role="alert">{{ errors.platform_ids }}</span>{% endif %}
+    </div>
+  </section>
+
+  <section class="form-section" aria-labelledby="s-media">
+    <h3 id="s-media">Gambar</h3>
+    <p class="sub">Unggah file atau isi URL gambar. Hasil unggahan otomatis dipotong dari tengah dan diubah ke ukuran standar, jadi tidak akan gepeng atau pecah.</p>
+    <div class="media-grid">
+      {% set cur_cover = game.cover_image if editing else '' %}
+      {% set cur_banner = game.banner_image if editing else '' %}
+
+      <div class="media-block" data-image-field="cover">
+        <span class="label" style="font-size:.85rem;font-weight:600;color:var(--ink-2)">Cover / poster</span>
+        <div class="preview-frame" data-state="{{ 'filled' if cur_cover else 'empty' }}" style="max-width: 220px">
+          <img class="aspect-[3/4] w-full object-cover object-center" src="{{ cur_cover or '/static/img/placeholder-cover.svg' }}" alt="Pratinjau cover">
+        </div>
+        <p class="preview-meta" aria-live="polite"></p>
+        <div class="field{% if errors.cover_file %} has-error{% endif %}">
+          <input class="file-input" type="file" name="cover_file" accept="image/jpeg,image/png,image/webp,image/gif" aria-label="Unggah cover">
+          <span class="hint">Ukuran ideal <b>600 x 800 px</b> (rasio 3:4). Gambar lain dipotong otomatis dari tengah. Maksimal 5 MB, format JPG, PNG, WebP, atau GIF.</span>
+          {% if errors.cover_file %}<span class="field-error" role="alert">{{ errors.cover_file }}</span>{% endif %}
+        </div>
+        <div class="field{% if errors.cover_url %} has-error{% endif %}">
+          <label for="f-cover_url">Atau URL gambar</label>
+          <input class="input" id="f-cover_url" data-url name="cover_url" type="url" value="{{ form.cover_url or '' }}" placeholder="https://" maxlength="400">
+          {% if errors.cover_url %}<span class="field-error" role="alert">{{ errors.cover_url }}</span>{% endif %}
+        </div>
+        {% if cur_cover %}<label class="check"><input type="checkbox" name="clear_cover"><span>Hapus cover saat disimpan</span></label>{% endif %}
+      </div>
+
+      <div class="media-block" data-image-field="banner">
+        <span class="label" style="font-size:.85rem;font-weight:600;color:var(--ink-2)">Banner hero</span>
+        <div class="preview-frame" data-state="{{ 'filled' if cur_banner else 'empty' }}">
+          <img class="aspect-[21/9] w-full object-cover" src="{{ cur_banner or '/static/img/placeholder-banner.svg' }}" alt="Pratinjau banner">
+        </div>
+        <p class="preview-meta" aria-live="polite"></p>
+        <div class="field{% if errors.banner_file %} has-error{% endif %}">
+          <input class="file-input" type="file" name="banner_file" accept="image/jpeg,image/png,image/webp,image/gif" aria-label="Unggah banner">
+          <span class="hint">Ukuran ideal <b>1400 x 550 px</b> (rasio 21:9). Gambar lain dipotong otomatis dari tengah. Maksimal 5 MB.</span>
+          {% if errors.banner_file %}<span class="field-error" role="alert">{{ errors.banner_file }}</span>{% endif %}
+        </div>
+        <div class="field{% if errors.banner_url %} has-error{% endif %}">
+          <label for="f-banner_url">Atau URL gambar</label>
+          <input class="input" id="f-banner_url" data-url name="banner_url" type="url" value="{{ form.banner_url or '' }}" placeholder="https://" maxlength="400">
+          {% if errors.banner_url %}<span class="field-error" role="alert">{{ errors.banner_url }}</span>{% endif %}
+        </div>
+        {% if cur_banner %}<label class="check"><input type="checkbox" name="clear_banner"><span>Hapus banner saat disimpan</span></label>{% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section" aria-labelledby="s-spec">
+    <h3 id="s-spec">Spesifikasi laptop / PC</h3>
+    <p class="sub">Kosongkan bagian yang tidak diketahui. Pisahkan alternatif dengan “ / ”, misalnya <span class="mono">GTX 1060 / RX 580</span>.</p>
+    <div class="spec-cols">
+      <div class="spec-col spec-col--min">
+        <h4>Minimum</h4>
+        {{ field('min_os', 'OS', form, errors, maxlength=120) }}
+        {{ field('min_cpu', 'CPU', form, errors, maxlength=160) }}
+        {{ field('min_ram', 'RAM', form, errors, maxlength=60, placeholder='8 GB') }}
+        {{ field('min_gpu', 'GPU', form, errors, maxlength=160) }}
+        {{ field('storage_req', 'Penyimpanan', form, errors, maxlength=60, placeholder='60 GB (SSD)') }}
+      </div>
+      <div class="spec-col spec-col--rec">
+        <h4>Rekomendasi</h4>
+        {{ field('rec_os', 'OS', form, errors, maxlength=120) }}
+        {{ field('rec_cpu', 'CPU', form, errors, maxlength=160) }}
+        {{ field('rec_ram', 'RAM', form, errors, maxlength=60, placeholder='16 GB') }}
+        {{ field('rec_gpu', 'GPU', form, errors, maxlength=160) }}
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Simpan perubahan' if editing else 'Tambah game' }}</button>
+    <a class="btn btn-ghost" href="/admin/games">Batal</a>
+  </div>
+</form>
+{% endblock %}

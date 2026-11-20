@@ -1,0 +1,102 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import icon, status_chip %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block topbar_actions %}<a class="btn btn-primary btn-sm" href="/admin/games/new">{{ icon('plus') }} Tambah game</a>{% endblock %}
+
+{% block content %}
+<div class="content-head">
+  <div>
+    <h2>Selamat datang, {{ current_user.username }}</h2>
+    <p>Ringkasan katalog dan aktivitas pengguna saat ini.</p>
+  </div>
+</div>
+
+<section aria-label="Statistik ringkas">
+  <div class="stat-grid">
+    {% for s in stats %}
+    <a class="stat{% if s.key == 'pending' and s.value %} stat--alert{% endif %}" href="{{ s.href }}">
+      <small>{{ s.label }}</small>
+      <b>{{ s.value|number_id }}</b>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="dash-grid">
+  <section class="card" aria-labelledby="chart-title">
+    <div class="card__head">
+      <h3 id="chart-title">Game per platform</h3>
+      <p>Satu game bisa muncul di beberapa platform.</p>
+    </div>
+    <div class="bars" role="list">
+      {% for platform, count in platforms %}
+      <div class="bar-row" role="listitem" tabindex="0" data-bar data-label="{{ platform.name }}" data-value="{{ count }}" style="--i: {{ loop.index0 }}"
+           aria-label="{{ platform.name }}: {{ count }} game">
+        <span class="bar-row__label">{{ platform.name }}</span>
+        <div class="bar-row__track"><div class="bar-row__fill" style="--w: {{ (count / platform_max * 100)|round(1) }}%"></div></div>
+        <span class="bar-row__val">{{ count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <details class="table-view">
+      <summary>Lihat sebagai tabel</summary>
+      <table>
+        <thead><tr><th scope="col">Platform</th><th scope="col">Jumlah game</th></tr></thead>
+        <tbody>{% for platform, count in platforms %}<tr><td>{{ platform.name }}</td><td>{{ count }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </details>
+  </section>
+
+  <section class="card" aria-labelledby="pending-title">
+    <div class="card__head">
+      <h3 id="pending-title">Pengajuan menunggu</h3>
+      <a class="text-link" href="/admin/requests?status=Pending">Kelola</a>
+    </div>
+    {% if pending %}
+    <ul class="mini-list">
+      {% for r in pending %}
+      <li>
+        <div><b>{{ r.game_title }}</b><small>{{ r.user.username }} · {{ r.submitted_at|tanggal }}</small></div>
+        <form class="inline-form" method="post" action="/admin/requests/{{ r.id }}/status">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="next" value="/admin">
+          <button class="btn btn-ghost btn-sm" name="status" value="Approved" type="submit" aria-label="Setujui {{ r.game_title }}">Setujui</button>
+          <button class="btn btn-danger btn-sm" name="status" value="Rejected" type="submit" aria-label="Tolak {{ r.game_title }}">Tolak</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">Semua pengajuan sudah ditinjau.</p>
+    {% endif %}
+  </section>
+
+  <section class="card" aria-labelledby="saved-title">
+    <div class="card__head"><h3 id="saved-title">Paling banyak disimpan</h3><a class="text-link" href="/admin/reports?report=2">Laporan lengkap</a></div>
+    <ul class="mini-list">
+      {% for g, saves, reviews in most_saved %}
+      <li>
+        <div><b>{{ g.title }}</b><small>{{ g.developer.name if g.developer else 'Tanpa developer' }}</small></div>
+        <span class="num">{{ saves }} simpan · {{ g.average_rating|rating_text }}★</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card" aria-labelledby="latest-title">
+    <div class="card__head"><h3 id="latest-title">Ulasan terbaru</h3><a class="text-link" href="/admin/comments">Moderasi</a></div>
+    {% if latest_comments %}
+    <ul class="mini-list">
+      {% for c in latest_comments %}
+      <li>
+        <div><b>{{ c.game.title }}</b><small>{{ c.user.username }} · {{ c.content|truncate(70) }}</small></div>
+        <span class="num">{{ c.rating }}★</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">Belum ada ulasan.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}
