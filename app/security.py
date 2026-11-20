@@ -39,6 +39,7 @@ def login_user(request: Request, user: User) -> None:
     """Mulai session baru (session lama dibuang agar tidak ada session fixation)."""
     request.session.clear()
     request.session["user_id"] = user.id
+    request.session["csrf"] = secrets.token_urlsafe(32)
 
 
 def logout_user(request: Request) -> None:
@@ -103,6 +104,17 @@ def csrf_token(request: Request) -> str:
     return token
 
 
+def _is_same_origin(request: Request) -> bool:
+    host = request.headers.get("host") or request.url.netloc
+    origin = request.headers.get("origin")
+    if origin:
+        return urlparse(origin).netloc == host
+    referer = request.headers.get("referer")
+    if referer:
+        return urlparse(referer).netloc == host
+    return False
+
+
 async def verify_csrf(request: Request) -> None:
     """Dependency untuk seluruh request yang mengubah data (POST/PUT/PATCH/DELETE)."""
     if request.method in ("GET", "HEAD", "OPTIONS"):
@@ -112,8 +124,12 @@ async def verify_csrf(request: Request) -> None:
         form = await request.form()
         submitted = form.get("csrf_token")
     expected = request.session.get("csrf")
-    if not expected or not submitted or not secrets.compare_digest(str(submitted), str(expected)):
-        raise HTTPException(
-            status_code=403,
-            detail="Token formulir tidak valid atau sudah kedaluwarsa. Muat ulang halaman lalu coba lagi.",
-        )
+    if expected and submitted and secrets.compare_digest(str(submitted), str(expected)):
+        return
+    if submitted and _is_same_origin(request):
+        request.session["csrf"] = secrets.token_urlsafe(32)
+        return
+    raise HTTPException(
+        status_code=403,
+        detail="Token formulir tidak valid atau sudah kedaluwarsa. Muat ulang halaman lalu coba lagi.",
+    )
