@@ -8,10 +8,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Environment variable yang sudah ada di sistem tidak ditimpa oleh isi .env (override=False).
 load_dotenv(BASE_DIR / ".env")
+IS_VERCEL = bool(os.getenv("VERCEL"))
+
 APP_DIR = BASE_DIR / "app"
 STATIC_DIR = APP_DIR / "static"
 TEMPLATES_DIR = APP_DIR / "templates"
-UPLOAD_DIR = STATIC_DIR / "uploads"
+UPLOAD_DIR = Path("/tmp/uploads") if IS_VERCEL else (STATIC_DIR / "uploads")
 COVER_DIR = UPLOAD_DIR / "covers"
 BANNER_DIR = UPLOAD_DIR / "banners"
 
@@ -33,7 +35,11 @@ for _scheme in ("postgres://", "postgresql://"):
         break
 
 # Ganti dengan string acak panjang di .env. Nilai default hanya untuk pengembangan lokal.
-SECRET_KEY = os.getenv("ATLASPLAY_SECRET_KEY") or "dev-only-secret-ganti-sebelum-deploy"
+SECRET_KEY = (
+    os.getenv("ATLASPLAY_SECRET_KEY")
+    or os.getenv("SECRET_KEY")
+    or "dev-only-secret-ganti-sebelum-deploy"
+)
 SESSION_COOKIE = "atlasplay_session"
 SESSION_MAX_AGE = 60 * 60 * 24 * 14  # 14 hari
 
